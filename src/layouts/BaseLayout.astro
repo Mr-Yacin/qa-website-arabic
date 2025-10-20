@@ -2,6 +2,7 @@
 import SEO from '../components/SEO.astro';
 import Navbar from '../components/Navbar.astro';
 import Footer from '../components/Footer.astro';
+import BackToTop from '../components/BackToTop.astro';
 import '../styles/global.css';
 
 export interface Props {
@@ -33,10 +34,13 @@ const {
     />
   </head>
   <body class="min-h-screen bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-50">
+    <!-- Skip to main content for screen readers -->
+    <a href="#main-content" class="skip-to-main">تخطي إلى المحتوى الرئيسي</a>
+    
     <div class="flex flex-col min-h-screen">
       <Navbar />
       
-      <main class="flex-1">
+      <main id="main-content" class="flex-1" tabindex="-1">
         <div class="max-w-3xl mx-auto px-4 md:px-6 py-8">
           <slot />
         </div>
@@ -44,5 +48,8 @@ const {
       
       <Footer />
     </div>
+    
+    <!-- Back to Top Button -->
+    <BackToTop />
   </body>
 </html>

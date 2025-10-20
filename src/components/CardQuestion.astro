@@ -25,9 +25,13 @@ const difficultyLabels = {
 };
 ---
 
-<article class="group relative bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 p-6 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 hover:border-indigo-300 dark:hover:border-indigo-600">
-  <a href={href} class="absolute inset-0 z-10" aria-label={`اقرأ: ${title}`}>
-    <span class="sr-only">اقرأ المقال الكامل</span>
+<article class="group relative bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 p-6 hover:shadow-xl hover:-translate-y-2 transition-all duration-300 hover:border-indigo-300 dark:hover:border-indigo-600 focus-within:ring-2 focus-within:ring-indigo-500 focus-within:ring-offset-2 dark:focus-within:ring-indigo-400 dark:focus-within:ring-offset-zinc-950">
+  <a 
+    href={href} 
+    class="absolute inset-0 z-10 focus-visible:outline-none" 
+    aria-label={`اقرأ السؤال الكامل: ${title}`}
+  >
+    <span class="sr-only">اقرأ السؤال الكامل: {title}</span>
   </a>
   
   <div class="flex flex-col h-full">
@@ -58,7 +62,7 @@ const difficultyLabels = {
     {tags.length > 0 && (
       <div class="flex flex-wrap gap-2 mt-auto">
         {tags.slice(0, 4).map((tag) => (
-          <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 transition-colors">
+          <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 group-hover:bg-indigo-100 dark:group-hover:bg-indigo-900/30 transition-colors duration-200">
             #{tag}
           </span>
         ))}

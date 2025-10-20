@@ -1,0 +1,64 @@
+---
+// Back to Top floating button component
+---
+
+<button
+  id="back-to-top"
+  type="button"
+  class="fixed bottom-6 left-6 z-50 p-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full shadow-lg hover:shadow-xl transform transition-all duration-300 opacity-0 translate-y-4 pointer-events-none focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-zinc-950"
+  aria-label="العودة إلى أعلى الصفحة"
+  title="العودة إلى أعلى الصفحة"
+>
+  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+  </svg>
+</button>
+
+<script>
+  // Back to top functionality
+  function initBackToTop() {
+    const backToTopButton = document.getElementById('back-to-top');
+    if (!backToTopButton) return;
+
+    // Show/hide button based on scroll position
+    function toggleButtonVisibility() {
+      if (window.scrollY > 600) {
+        backToTopButton.classList.remove('opacity-0', 'translate-y-4', 'pointer-events-none');
+        backToTopButton.classList.add('opacity-100', 'translate-y-0');
+      } else {
+        backToTopButton.classList.add('opacity-0', 'translate-y-4', 'pointer-events-none');
+        backToTopButton.classList.remove('opacity-100', 'translate-y-0');
+      }
+    }
+
+    // Smooth scroll to top
+    function scrollToTop() {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    }
+
+    // Event listeners
+    window.addEventListener('scroll', toggleButtonVisibility, { passive: true });
+    backToTopButton.addEventListener('click', scrollToTop);
+
+    // Keyboard support
+    backToTopButton.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        scrollToTop();
+      }
+    });
+
+    // Initial check
+    toggleButtonVisibility();
+  }
+
+  // Initialize on DOM content loaded
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initBackToTop);
+  } else {
+    initBackToTop();
+  }
+</script>

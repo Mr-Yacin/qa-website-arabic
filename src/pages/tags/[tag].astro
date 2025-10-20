@@ -72,10 +72,20 @@ const pageDescription = `تصفح جميع الأسئلة المتعلقة بـ 
     <!-- Header Section -->
     <div class="space-y-4">
       <!-- Breadcrumb -->
-      <nav class="flex items-center space-x-2 text-sm text-zinc-500 dark:text-zinc-400" dir="ltr">
-        <a href="/" class="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">الرئيسية</a>
+      <nav class="flex items-center space-x-2 text-sm text-zinc-500 dark:text-zinc-400" dir="ltr" aria-label="مسار التنقل">
+        <a 
+          href="/" 
+          class="hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-zinc-950 rounded-md px-1 py-0.5"
+        >
+          الرئيسية
+        </a>
         <span>/</span>
-        <a href="/tags" class="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">الوسوم</a>
+        <a 
+          href="/tags" 
+          class="hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-zinc-950 rounded-md px-1 py-0.5"
+        >
+          الوسوم
+        </a>
         <span>/</span>
         <span class="text-zinc-900 dark:text-zinc-100">{tag}</span>
       </nav>
@@ -144,7 +154,7 @@ const pageDescription = `تصفح جميع الأسئلة المتعلقة بـ 
         </div>
         <a 
           href="/tags" 
-          class="inline-block mt-4 text-indigo-600 dark:text-indigo-400 hover:underline"
+          class="inline-block mt-4 text-indigo-600 dark:text-indigo-400 hover:underline transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-zinc-950 rounded-md px-2 py-1"
         >
           تصفح الوسوم الأخرى
         </a>
@@ -161,7 +171,8 @@ const pageDescription = `تصفح جميع الأسئلة المتعلقة بـ 
           {sortedRelatedTags.map(([relatedTag, count]) => (
             <a 
               href={`/tags/${encodeURIComponent(relatedTag)}`}
-              class="inline-flex items-center px-3 py-2 rounded-full text-sm font-medium bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors"
+              class="inline-flex items-center px-3 py-2 rounded-full text-sm font-medium bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 hover:text-indigo-800 dark:hover:text-indigo-300 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-zinc-950 hover:scale-105"
+              aria-label={`عرض جميع الأسئلة المتعلقة بوسم ${relatedTag} (${count} سؤال)`}
             >
               #{relatedTag}
               <span class="mr-1.5 text-xs opacity-75">({count})</span>
@@ -175,7 +186,7 @@ const pageDescription = `تصفح جميع الأسئلة المتعلقة بـ 
     <div class="flex justify-center pt-8">
       <a 
         href="/tags" 
-        class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+        class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-zinc-950 hover:scale-105 shadow-lg hover:shadow-xl"
       >
         عرض جميع الوسوم
       </a>

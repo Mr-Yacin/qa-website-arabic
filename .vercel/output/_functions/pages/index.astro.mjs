@@ -1,9 +1,9 @@
 /* empty css                                 */
-import { c as createComponent, r as renderComponent, b as renderTemplate, m as maybeRenderHead, d as addAttribute } from '../chunks/astro/server_B4x8f0ED.mjs';
+import { c as createComponent, r as renderComponent, b as renderTemplate, m as maybeRenderHead, d as addAttribute } from '../chunks/astro/server_B_luCV0f.mjs';
 import 'kleur/colors';
-import { g as getCollection } from '../chunks/_astro_content_DuxOKI3h.mjs';
-import { $ as $$BaseLayout } from '../chunks/BaseLayout_VimIcW01.mjs';
-import { $ as $$CardQuestion } from '../chunks/CardQuestion_vDTDZosZ.mjs';
+import { g as getCollection } from '../chunks/_astro_content_CAazhIw8.mjs';
+import { $ as $$BaseLayout } from '../chunks/BaseLayout_CuslUIHG.mjs';
+import { $ as $$CardQuestion } from '../chunks/CardQuestion_CD2MAFBX.mjs';
 export { renderers } from '../renderers.mjs';
 
 const $$Index = createComponent(async ($$result, $$props, $$slots) => {
@@ -26,13 +26,13 @@ const $$Index = createComponent(async ($$result, $$props, $$slots) => {
 <span class="text-indigo-600 dark:text-indigo-400">الأسئلة والأجوبة</span> </h1> <p class="text-lg md:text-xl text-zinc-600 dark:text-zinc-300 mb-8 leading-relaxed">
 اكتشف إجابات شاملة ومفيدة لأسئلتك التقنية باللغة العربية. 
         نقدم محتوى عالي الجودة يساعدك في رحلتك التعليمية والمهنية.
-</p> <div class="flex flex-col sm:flex-row gap-4 justify-center"> <a href="/tags" class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 transition-colors duration-200 shadow-lg hover:shadow-xl">
+</p> <div class="flex flex-col sm:flex-row gap-4 justify-center"> <a href="/tags" class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 transition-all duration-200 shadow-lg hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-zinc-950 hover:scale-105">
 تصفح المواضيع
-</a> <a href="/questions" class="inline-flex items-center justify-center px-6 py-3 border border-zinc-300 dark:border-zinc-600 text-base font-medium rounded-lg text-zinc-700 dark:text-zinc-300 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors duration-200">
+</a> <a href="/questions" class="inline-flex items-center justify-center px-6 py-3 border border-zinc-300 dark:border-zinc-600 text-base font-medium rounded-lg text-zinc-700 dark:text-zinc-300 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-zinc-950 hover:scale-105">
 جميع الأسئلة
 </a> </div> </div> </section>  <section class="mb-12"> <div class="flex items-center justify-between mb-8"> <h2 class="text-2xl md:text-3xl font-bold text-zinc-900 dark:text-zinc-100">
 أحدث الأسئلة
-</h2> <a href="/questions" class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium transition-colors duration-200">
+</h2> <a href="/questions" class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-zinc-950 rounded-md px-2 py-1 hover:scale-105">
 عرض الكل ←
 </a> </div> ${latestQuestions.length > 0 ? renderTemplate`<div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3"> ${latestQuestions.map((question) => renderTemplate`${renderComponent($$result2, "CardQuestion", $$CardQuestion, { "href": `/q/${question.slug}`, "title": question.data.question, "description": question.data.shortAnswer, "date": question.data.pubDate, "tags": question.data.tags, "difficulty": question.data.difficulty })}`)} </div>` : renderTemplate`<div class="text-center py-12"> <p class="text-zinc-500 dark:text-zinc-400 text-lg">
 لا توجد أسئلة متاحة حالياً
@@ -40,18 +40,18 @@ const $$Index = createComponent(async ($$result, $$props, $$slots) => {
 المواضيع الشائعة
 </h2> <p class="text-zinc-600 dark:text-zinc-300">
 اكتشف أكثر المواضيع بحثاً واهتماماً من قبل المجتمع
-</p> </div> ${popularTags.length > 0 ? renderTemplate`<div class="flex flex-wrap gap-3"> ${popularTags.map(({ tag, count }) => renderTemplate`<a${addAttribute(`/tags/${tag}`, "href")} class="group inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg hover:border-indigo-300 dark:hover:border-indigo-600 hover:shadow-md transition-all duration-200"> <span class="text-zinc-700 dark:text-zinc-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 font-medium">
+</p> </div> ${popularTags.length > 0 ? renderTemplate`<div class="flex flex-wrap gap-3"> ${popularTags.map(({ tag, count }) => renderTemplate`<a${addAttribute(`/tags/${tag}`, "href")} class="group inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg hover:border-indigo-300 dark:hover:border-indigo-600 hover:shadow-md transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-zinc-950 hover:scale-105"${addAttribute(`\u0639\u0631\u0636 \u062C\u0645\u064A\u0639 \u0627\u0644\u0623\u0633\u0626\u0644\u0629 \u0627\u0644\u0645\u062A\u0639\u0644\u0642\u0629 \u0628\u0648\u0633\u0645 ${tag} (${count} \u0633\u0624\u0627\u0644)`, "aria-label")}> <span class="text-zinc-700 dark:text-zinc-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 font-medium">
 #${tag} </span> <span class="text-xs text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-700 px-2 py-1 rounded-full"> ${count} </span> </a>`)} </div>` : renderTemplate`<div class="text-center py-8"> <p class="text-zinc-500 dark:text-zinc-400">
 لا توجد وسوم متاحة حالياً
-</p> </div>`} ${popularTags.length > 0 && renderTemplate`<div class="mt-6 text-center"> <a href="/tags" class="inline-flex items-center text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium transition-colors duration-200">
+</p> </div>`} ${popularTags.length > 0 && renderTemplate`<div class="mt-6 text-center"> <a href="/tags" class="inline-flex items-center text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-zinc-950 rounded-md px-2 py-1 hover:scale-105">
 عرض جميع المواضيع ←
 </a> </div>`} </section>  <section class="text-center py-12 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/30 rounded-2xl border border-indigo-100 dark:border-indigo-800/50"> <div class="max-w-xl mx-auto px-6"> <h3 class="text-2xl font-bold text-zinc-900 dark:text-zinc-100 mb-4">
 ابدأ رحلة التعلم الآن
 </h3> <p class="text-zinc-600 dark:text-zinc-300 mb-6">
 انضم إلى مجتمعنا واكتشف المزيد من الإجابات المفيدة والمحتوى التعليمي المتميز
-</p> <div class="flex flex-col sm:flex-row gap-3 justify-center"> <a href="/questions" class="inline-flex items-center justify-center px-6 py-3 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white font-medium rounded-lg transition-colors duration-200 shadow-lg hover:shadow-xl">
+</p> <div class="flex flex-col sm:flex-row gap-3 justify-center"> <a href="/questions" class="inline-flex items-center justify-center px-6 py-3 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white font-medium rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-zinc-950 hover:scale-105">
 استكشف الأسئلة
-</a> <a href="/tags" class="inline-flex items-center justify-center px-6 py-3 border border-indigo-300 dark:border-indigo-600 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 font-medium rounded-lg transition-colors duration-200">
+</a> <a href="/tags" class="inline-flex items-center justify-center px-6 py-3 border border-indigo-300 dark:border-indigo-600 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 font-medium rounded-lg transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-zinc-950 hover:scale-105">
 تصفح حسب الموضوع
 </a> </div> </div> </section> ` })}`;
 }, "C:/Users/yacin/Documents/qa-mva/src/pages/index.astro", void 0);
