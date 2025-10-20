@@ -1,4 +1,6 @@
 ---
+import SimpleThemeToggle from './SimpleThemeToggle.astro';
+
 // Navigation links for the site
 const navLinks = [
   { href: '/', label: 'الرئيسية' },
@@ -9,7 +11,7 @@ const navLinks = [
 const currentPath = Astro.url.pathname;
 ---
 
-<header class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-zinc-200 dark:bg-zinc-950/80 dark:border-zinc-800">
+<header class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-zinc-200 dark:bg-zinc-950/80 dark:border-zinc-800 transition-colors duration-300">
   <nav class="max-w-3xl mx-auto px-3 sm:px-4 md:px-6">
     <div class="flex items-center justify-between h-14 sm:h-16">
       <!-- Site Title -->
@@ -24,7 +26,7 @@ const currentPath = Astro.url.pathname;
         </a>
       </div>
 
-      <!-- Navigation Links -->
+      <!-- Navigation Links and Theme Switcher -->
       <div class="flex items-center gap-2 sm:gap-4 md:gap-6 space-x-reverse">
         {navLinks.map(({ href, label }) => {
           const isActive = currentPath === href || (href === '/tags' && currentPath.startsWith('/tags'));
@@ -44,6 +46,9 @@ const currentPath = Astro.url.pathname;
             </a>
           );
         })}
+        
+        <!-- Theme Toggle -->
+        <SimpleThemeToggle />
       </div>
     </div>
   </nav>

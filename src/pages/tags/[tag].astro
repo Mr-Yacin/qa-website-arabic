@@ -32,7 +32,7 @@ if (!tag) {
 // Get all questions and filter by tag
 const allQuestions = await getCollection('qa');
 const questionsWithTag = allQuestions
-  .filter(question => question.data.tags.includes(tag))
+  .filter(question => question.data.tags.includes(tag as string))
   .sort((a, b) => {
     // Sort by publication date in descending order (newest first)
     return new Date(b.data.pubDate).getTime() - new Date(a.data.pubDate).getTime();

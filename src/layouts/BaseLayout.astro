@@ -32,8 +32,34 @@ const {
       canonical={canonical}
       noindex={noindex}
     />
+    <!-- Theme initialization script - runs before page render -->
+    <script>
+      // Prevent flash of unstyled content by applying theme class early
+      (function() {
+        const theme = (() => {
+          try {
+            const stored = localStorage.getItem('qa-site-theme');
+            if (stored && ['light', 'dark', 'system'].includes(stored)) {
+              return stored;
+            }
+          } catch (error) {
+            console.warn('Failed to parse stored theme:', error);
+          }
+          return 'system';
+        })();
+
+        const root = document.documentElement;
+        
+        // Apply theme mode
+        const effectiveMode = theme === 'system' 
+          ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+          : theme;
+        
+        root.classList.add(effectiveMode);
+      })();
+    </script>
   </head>
-  <body class="min-h-screen bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-50">
+  <body class="min-h-screen bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-50 transition-colors duration-300">
     <!-- Skip to main content for screen readers -->
     <a href="#main-content" class="skip-to-main">تخطي إلى المحتوى الرئيسي</a>
     
@@ -57,17 +83,17 @@ const {
       // Optimize image loading performance
       function optimizeImageLoading() {
         // Add loaded class to images when they finish loading
-        const images = document.querySelectorAll('img[loading="lazy"]');
+        const images = document.querySelectorAll('img[loading="lazy"]') as NodeListOf<HTMLImageElement>;
         images.forEach(img => {
           if (img.complete) {
             img.style.opacity = '1';
             img.classList.add('loaded');
           } else {
-            img.addEventListener('load', function() {
+            img.addEventListener('load', function(this: HTMLImageElement) {
               this.style.opacity = '1';
               this.classList.add('loaded');
             });
-            img.addEventListener('error', function() {
+            img.addEventListener('error', function(this: HTMLImageElement) {
               this.style.opacity = '1';
               this.classList.add('error');
             });

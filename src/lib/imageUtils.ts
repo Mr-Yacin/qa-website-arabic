@@ -12,9 +12,7 @@ export interface ImageFallbackOptions {
 /**
  * Generate a placeholder image URL based on text and options
  */
-export function generatePlaceholderUrl(options: ImageFallbackOptions = {}): string {
-  const { width = 800, height = 450, text = 'صورة', type = 'question' } = options;
-  
+export function generatePlaceholderUrl(_options: ImageFallbackOptions = {}): string {
   // For now, return the default SVG placeholder
   // In the future, this could generate dynamic placeholders or use a service
   return '/images/placeholder-question.svg';

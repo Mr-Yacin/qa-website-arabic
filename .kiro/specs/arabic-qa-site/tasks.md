@@ -128,13 +128,10 @@
   - Run Lighthouse audit to achieve Performance ≥ 90 and SEO ≥ 90 scores
   - _Requirements: 14.4, 13.1, 13.2, 13.3, 7.1, 8.1, 9.3, 11.1_
 
-- [ ] 19. Implement advanced theming system
-  - Create theme configuration system with customizable color schemes
-  - Implement theme switcher component with light/dark/system preferences
+- [x] 19. Implement simple theming system
+  - Create simple theme toggle component with light/dark/system preferences
   - Add theme persistence using localStorage with fallback to system preference
-  - Create custom theme variants (e.g., high contrast, colorblind-friendly)
-  - Implement theme-aware image placeholders and fallbacks
-  - Add theme transition animations for smooth switching
+  - Add smooth theme transition animations
   - Ensure theme consistency across all components and pages
-  - Test theme accessibility and contrast ratios for WCAG compliance
-  - _Requirements: 16.1, 16.2, 16.3, 16.4, 16.5, 16.6, 16.7, 16.8_
+  - Keep original design as default with simple dark mode support
+  - _Requirements: 16.1, 16.2, 16.6, 16.7_

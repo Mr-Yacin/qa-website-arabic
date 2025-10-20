@@ -1,11 +1,11 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ['./src/**/*.{astro,html,js,jsx,md,mdx,svelte,ts,tsx,vue}'],
-  darkMode: 'media', // Use system preference for dark mode
+  darkMode: 'class', // Use class-based dark mode for better control
   theme: {
     extend: {
       colors: {
-        // Primary color scheme using indigo
+        // Primary color scheme using indigo (default theme)
         primary: {
           50: '#eef2ff',
           100: '#e0e7ff',
@@ -19,7 +19,7 @@ export default {
           900: '#312e81',
           950: '#1e1b4b',
         },
-        // Accent color scheme using emerald
+        // Accent color scheme using emerald (default theme)
         accent: {
           50: '#ecfdf5',
           100: '#d1fae5',
