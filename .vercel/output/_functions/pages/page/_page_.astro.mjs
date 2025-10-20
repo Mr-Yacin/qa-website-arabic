@@ -1,8 +1,9 @@
 /* empty css                                    */
-import { c as createComponent, a as createAstro, r as renderComponent, b as renderTemplate, m as maybeRenderHead, d as addAttribute, F as Fragment } from '../../chunks/astro/server_DYpdScgV.mjs';
+import { c as createComponent, a as createAstro, r as renderComponent, b as renderTemplate, m as maybeRenderHead, d as addAttribute, F as Fragment } from '../../chunks/astro/server_B4x8f0ED.mjs';
 import 'kleur/colors';
-import { $ as $$BaseLayout, g as getCollection } from '../../chunks/BaseLayout_yosFqUFg.mjs';
-import { $ as $$CardQuestion } from '../../chunks/CardQuestion_15u53b_A.mjs';
+import { g as getCollection } from '../../chunks/_astro_content_DuxOKI3h.mjs';
+import { $ as $$BaseLayout } from '../../chunks/BaseLayout_VimIcW01.mjs';
+import { $ as $$CardQuestion } from '../../chunks/CardQuestion_vDTDZosZ.mjs';
 import { p as paginate } from '../../chunks/paginate__--Aod_g.mjs';
 export { renderers } from '../../renderers.mjs';
 

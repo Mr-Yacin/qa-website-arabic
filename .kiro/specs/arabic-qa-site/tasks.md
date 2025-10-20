@@ -85,7 +85,7 @@
   - Implement proper SEO titles for paginated pages
   - _Requirements: 10.1, 10.2, 10.3, 10.4, 10.5, 10.6_
 
-- [ ] 13. Build RSS feed and SEO infrastructure
+- [x] 13. Build RSS feed and SEO infrastructure
   - Create src/pages/rss.xml.js with latest 20 questions using @astrojs/rss
   - Implement src/pages/robots.txt.ts with exact sitemap reference: Sitemap: https://example.com/sitemap-index.xml
   - Ensure sitemap generation includes all pages via @astrojs/sitemap integration

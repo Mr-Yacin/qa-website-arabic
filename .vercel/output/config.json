@@ -93,6 +93,14 @@
 			"dest": "_render"
 		},
 		{
+			"src": "^\\/robots\\.txt\\/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^\\/rss\\.xml\\/?$",
+			"dest": "_render"
+		},
+		{
 			"src": "^\\/$",
 			"dest": "_render"
 		}
