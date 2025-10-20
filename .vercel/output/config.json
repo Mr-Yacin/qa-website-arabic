@@ -2,14 +2,11 @@
 	"version": 3,
 	"routes": [
 		{
-			"src": "^/(.*)/$",
+			"src": "/_server-islands/([^/]+?)/",
 			"headers": {
-				"Location": "/$1"
+				"Location": "/_server-islands/$1"
 			},
 			"status": 308
-		},
-		{
-			"handle": "filesystem"
 		},
 		{
 			"src": "^/_astro/(.*)$",
@@ -19,19 +16,26 @@
 			"continue": true
 		},
 		{
-			"src": "^/_server-islands/([^/]+?)$",
+			"handle": "filesystem"
+		},
+		{
+			"src": "^\\/_server-islands\\/([^/]+?)$",
 			"dest": "_render"
 		},
 		{
-			"src": "^/_image$",
+			"src": "^\\/_image$",
 			"dest": "_render"
 		},
 		{
-			"src": "^/test-components$",
+			"src": "^\\/api\\/avg$",
 			"dest": "_render"
 		},
 		{
-			"src": "^/$",
+			"src": "^\\/api\\/rate$",
+			"dest": "_render"
+		},
+		{
+			"src": "^\\/$",
 			"dest": "_render"
 		}
 	]
