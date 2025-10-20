@@ -1,5 +1,5 @@
 import { j as joinPaths, i as isRemotePath } from './path_tbLlI_c1.mjs';
-import { A as AstroError, ae as ExpectedImage, af as LocalImageUsedWrongly, ag as MissingImageDimension, ah as UnsupportedImageFormat, ai as IncompatibleDescriptorOptions, aj as UnsupportedImageConversion, ak as toStyleString, al as NoImageMetadata, am as FailedToFetchRemoteImageDimensions, an as ExpectedImageOptions, ao as ExpectedNotESMImage, ap as InvalidImageService, c as createComponent, a as createAstro, aq as ImageMissingAlt, m as maybeRenderHead, d as addAttribute, ar as spreadAttributes, b as renderTemplate, as as ExperimentalFontsNotEnabled, at as FontFamilyNotFound, u as unescapeHTML } from './astro/server_B_luCV0f.mjs';
+import { A as AstroError, ae as ExpectedImage, af as LocalImageUsedWrongly, ag as MissingImageDimension, ah as UnsupportedImageFormat, ai as IncompatibleDescriptorOptions, aj as UnsupportedImageConversion, ak as toStyleString, al as NoImageMetadata, am as FailedToFetchRemoteImageDimensions, an as ExpectedImageOptions, ao as ExpectedNotESMImage, ap as InvalidImageService, c as createComponent, b as createAstro, aq as ImageMissingAlt, m as maybeRenderHead, d as addAttribute, ar as spreadAttributes, a as renderTemplate, as as ExperimentalFontsNotEnabled, at as FontFamilyNotFound, u as unescapeHTML } from './astro/server_CoapMQ39.mjs';
 import { D as DEFAULT_OUTPUT_FORMAT, a as VALID_SUPPORTED_FORMATS, b as DEFAULT_HASH_PROPS } from './consts_BmVDRGlB.mjs';
 import { i as isRemoteAllowed } from './remote_BZTrrENa.mjs';
 import * as mime from 'mrmime';
@@ -1188,7 +1188,7 @@ async function getConfiguredImageService() {
   if (!globalThis?.astroAsset?.imageService) {
     const { default: service } = await import(
       // @ts-expect-error
-      './sharp_BGl8YYhV.mjs'
+      './sharp_BHeO9wlX.mjs'
     ).catch((e) => {
       const error = new AstroError(InvalidImageService);
       error.cause = e;

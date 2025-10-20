@@ -3,25 +3,26 @@ const currentYear = new Date().getFullYear();
 
 // Essential footer links
 const footerLinks = [
-  { href: '/rss.xml', label: 'RSS' },
-  { href: '/tags', label: 'الوسوم' },
+  { href: '/contact', label: 'اتصل بنا' },
+  { href: '/privacy', label: 'سياسة الخصوصية' },
+  { href: '/terms', label: 'الشروط والأحكام' },
 ];
 ---
 
-<footer class="mt-16 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900">
-  <div class="max-w-3xl mx-auto px-4 md:px-6 py-8">
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+<footer class="mt-12 sm:mt-16 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900">
+  <div class="max-w-3xl mx-auto px-3 sm:px-4 md:px-6 py-6 sm:py-8">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
       <!-- Copyright -->
-      <div class="text-sm text-zinc-600 dark:text-zinc-400">
+      <div class="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 text-center sm:text-right order-2 sm:order-1">
         © {currentYear} موقع الأسئلة والأجوبة. جميع الحقوق محفوظة.
       </div>
 
       <!-- Essential Links -->
-      <div class="flex items-center gap-6">
+      <div class="flex items-center justify-center sm:justify-start gap-4 sm:gap-6 order-1 sm:order-2">
         {footerLinks.map(({ href, label }) => (
           <a
             href={href}
-            class="text-sm text-zinc-600 dark:text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-zinc-900 rounded-md px-3 py-2 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 will-change-transform"
+            class="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-zinc-900 rounded-md px-2 sm:px-3 py-1.5 sm:py-2 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 will-change-transform"
           >
             {label}
           </a>

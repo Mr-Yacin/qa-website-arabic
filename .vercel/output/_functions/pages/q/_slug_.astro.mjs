@@ -1,12 +1,12 @@
-/* empty css                                    */
-import { c as createComponent, a as createAstro, m as maybeRenderHead, d as addAttribute, b as renderTemplate, r as renderComponent, F as Fragment, u as unescapeHTML } from '../../chunks/astro/server_B_luCV0f.mjs';
+/* empty css                                      */
+import { c as createComponent, b as createAstro, m as maybeRenderHead, d as addAttribute, a as renderTemplate, r as renderComponent, F as Fragment, u as unescapeHTML } from '../../chunks/astro/server_CoapMQ39.mjs';
 import 'kleur/colors';
-import { g as getCollection } from '../../chunks/_astro_content_CAazhIw8.mjs';
-import { $ as $$BaseLayout } from '../../chunks/BaseLayout_CSI2mDnn.mjs';
+import { g as getCollection } from '../../chunks/_astro_content_CuzDBXnp.mjs';
+import { $ as $$BaseLayout } from '../../chunks/BaseLayout_BHsBBQfC.mjs';
 import 'clsx';
 import { jsxs, jsx } from 'react/jsx-runtime';
 import { useState, useEffect } from 'react';
-import { r as relatedByTags, $ as $$CardQuestion, f as formatDate } from '../../chunks/CardQuestion_BqkHmwZX.mjs';
+import { r as relatedByTags, $ as $$CardQuestion, f as formatDate } from '../../chunks/CardQuestion_CP39XPBB.mjs';
 /* empty css                                     */
 export { renderers } from '../../renderers.mjs';
 
