@@ -27,7 +27,7 @@
   - Create sample hero images in public/images/ directory
   - _Requirements: 3.5, 15.1, 15.2, 15.3_
 
-- [ ] 5. Implement utility functions
+- [x] 5. Implement utility functions
   - Create src/lib/paginate.ts with paginate function returning PaginationResult with page, pages, total, items, hasNext, hasPrev
   - Create src/lib/utils.ts with formatDate function using Arabic locale (ar-MA)
   - Implement relatedByTags function to find related questions by tag overlap
