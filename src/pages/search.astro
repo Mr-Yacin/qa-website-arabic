@@ -1,0 +1,232 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import CardQuestion from '../components/CardQuestion.astro';
+import SearchBanner from '../components/SearchBanner.jsx';
+
+// Get search query from URL parameters
+const url = Astro.url;
+const searchQuery = url.searchParams.get('q') || '';
+const trimmedQuery = searchQuery.trim();
+
+// Get all Q&A entries for searching
+const allQuestions = await getCollection('qa');
+
+// Filter questions based on search query
+let filteredQuestions: typeof allQuestions = [];
+let searchPerformed = false;
+
+if (trimmedQuery.length >= 2) {
+  searchPerformed = true;
+  const queryLower = trimmedQuery.toLowerCase();
+  
+  filteredQuestions = allQuestions.filter((question) => {
+    const titleMatch = question.data.question.toLowerCase().includes(queryLower);
+    const shortAnswerMatch = question.data.shortAnswer.toLowerCase().includes(queryLower);
+    const tagsMatch = question.data.tags.some(tag => 
+      tag.toLowerCase().includes(queryLower)
+    );
+    
+    // Also search in content (first 500 characters)
+    const contentMatch = question.body.toLowerCase().slice(0, 500).includes(queryLower);
+    
+    return titleMatch || shortAnswerMatch || tagsMatch || contentMatch;
+  });
+
+  // Sort by relevance (title matches first, then short answer, then content)
+  filteredQuestions.sort((a, b) => {
+    const aTitle = a.data.question.toLowerCase().includes(queryLower);
+    const bTitle = b.data.question.toLowerCase().includes(queryLower);
+    const aShortAnswer = a.data.shortAnswer.toLowerCase().includes(queryLower);
+    const bShortAnswer = b.data.shortAnswer.toLowerCase().includes(queryLower);
+    
+    if (aTitle && !bTitle) return -1;
+    if (!aTitle && bTitle) return 1;
+    if (aShortAnswer && !bShortAnswer) return -1;
+    if (!aShortAnswer && bShortAnswer) return 1;
+    
+    // If same relevance, sort by date (newest first)
+    return new Date(b.data.pubDate).getTime() - new Date(a.data.pubDate).getTime();
+  });
+}
+
+// SEO meta data
+const title = searchPerformed 
+  ? `نتائج البحث عن "${trimmedQuery}" - موقع الأسئلة والأجوبة`
+  : 'البحث في الأسئلة والأجوبة';
+const description = searchPerformed
+  ? `نتائج البحث عن "${trimmedQuery}" في موقع الأسئلة والأجوبة. ${filteredQuestions.length} نتيجة متاحة.`
+  : 'ابحث في مجموعة شاملة من الأسئلة والأجوبة باللغة العربية. اكتشف الإجابات التي تحتاجها.';
+
+// Popular search suggestions (most common tags)
+const tagCounts = new Map<string, number>();
+allQuestions.forEach((question) => {
+  question.data.tags.forEach((tag) => {
+    tagCounts.set(tag, (tagCounts.get(tag) || 0) + 1);
+  });
+});
+
+const popularSearches = Array.from(tagCounts.entries())
+  .sort((a, b) => b[1] - a[1])
+  .slice(0, 8)
+  .map(([tag]) => tag);
+---
+
+<BaseLayout title={title} description={description}>
+  <!-- Page Header -->
+  <div class="mb-8">
+    <h1 class="text-3xl md:text-4xl font-bold text-zinc-900 dark:text-zinc-100 mb-4">
+      {searchPerformed ? 'نتائج البحث' : 'البحث في الأسئلة'}
+    </h1>
+    
+    {searchPerformed && (
+      <div class="mb-6">
+        <p class="text-zinc-600 dark:text-zinc-300 text-lg mb-2">
+          نتائج البحث عن: <span class="font-semibold text-indigo-600 dark:text-indigo-400">"{trimmedQuery}"</span>
+        </p>
+        <div class="text-sm text-zinc-500 dark:text-zinc-400">
+          {filteredQuestions.length === 0 
+            ? 'لا توجد نتائج' 
+            : `${filteredQuestions.length} ${filteredQuestions.length === 1 ? 'نتيجة' : 'نتيجة'} متاحة`
+          }
+        </div>
+      </div>
+    )}
+
+    <!-- Search Banner -->
+    <div class="mb-8">
+      <SearchBanner 
+        client:load 
+        placeholder="ابحث في الأسئلة..." 
+        maxSuggestions={5} 
+        className="w-full max-w-2xl mx-auto"
+      />
+    </div>
+  </div>
+
+  <!-- Search Results -->
+  {searchPerformed ? (
+    filteredQuestions.length > 0 ? (
+      <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-12">
+        {filteredQuestions.map((question) => (
+          <CardQuestion
+            href={`/q/${question.slug}`}
+            title={question.data.question}
+            description={question.data.shortAnswer}
+            date={question.data.pubDate}
+            tags={question.data.tags}
+            difficulty={question.data.difficulty}
+          />
+        ))}
+      </div>
+    ) : (
+      <!-- No Results State -->
+      <div class="text-center py-12">
+        <div class="max-w-md mx-auto">
+          <!-- Search Icon -->
+          <div class="mx-auto w-16 h-16 bg-zinc-100 dark:bg-zinc-800 rounded-full flex items-center justify-center mb-6">
+            <svg class="w-8 h-8 text-zinc-400 dark:text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+          
+          <h2 class="text-xl font-semibold text-zinc-900 dark:text-zinc-100 mb-3">
+            لا توجد نتائج لـ "{trimmedQuery}"
+          </h2>
+          
+          <p class="text-zinc-600 dark:text-zinc-300 mb-6">
+            لم نتمكن من العثور على أي أسئلة تطابق بحثك. جرب البحث بكلمات مختلفة أو تصفح المواضيع الشائعة أدناه.
+          </p>
+
+          <!-- Search Suggestions -->
+          <div class="mb-6">
+            <h3 class="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-3">جرب البحث عن:</h3>
+            <div class="flex flex-wrap gap-2 justify-center">
+              {popularSearches.slice(0, 6).map((tag) => (
+                <a
+                  href={`/search?q=${encodeURIComponent(tag)}`}
+                  class="inline-flex items-center px-3 py-1.5 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-200 dark:hover:bg-indigo-900/50 font-medium rounded-md transition-all duration-200 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-zinc-950 hover:scale-105"
+                >
+                  {tag}
+                </a>
+              ))}
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="flex flex-col sm:flex-row gap-3 justify-center">
+            <a
+              href="/questions"
+              class="inline-flex items-center justify-center px-6 py-3 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white font-medium rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-zinc-950 hover:scale-105"
+            >
+              تصفح جميع الأسئلة
+            </a>
+            <a
+              href="/tags"
+              class="inline-flex items-center justify-center px-6 py-3 border border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:text-zinc-300 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 font-medium rounded-lg transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-zinc-950 hover:scale-105"
+            >
+              تصفح المواضيع
+            </a>
+          </div>
+        </div>
+      </div>
+    )
+  ) : (
+    <!-- Initial Search State -->
+    <div class="text-center py-12">
+      <div class="max-w-2xl mx-auto">
+        <h2 class="text-2xl font-semibold text-zinc-900 dark:text-zinc-100 mb-4">
+          ابحث في مكتبة الأسئلة والأجوبة
+        </h2>
+        
+        <p class="text-zinc-600 dark:text-zinc-300 text-lg mb-8">
+          اكتشف إجابات لأسئلتك من خلال البحث في مجموعة شاملة من المحتوى التعليمي باللغة العربية
+        </p>
+
+        <!-- Popular Searches -->
+        <div class="mb-8">
+          <h3 class="text-lg font-medium text-zinc-700 dark:text-zinc-300 mb-4">المواضيع الشائعة:</h3>
+          <div class="flex flex-wrap gap-3 justify-center">
+            {popularSearches.map((tag) => (
+              <a
+                href={`/search?q=${encodeURIComponent(tag)}`}
+                class="inline-flex items-center px-4 py-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg hover:border-indigo-300 dark:hover:border-indigo-600 hover:shadow-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-zinc-950 hover:scale-105"
+              >
+                <span class="text-zinc-700 dark:text-zinc-300 font-medium">#{tag}</span>
+              </a>
+            ))}
+          </div>
+        </div>
+
+        <!-- Navigation Links -->
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+          <a
+            href="/questions"
+            class="inline-flex items-center justify-center px-6 py-3 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white font-medium rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-zinc-950 hover:scale-105"
+          >
+            تصفح جميع الأسئلة
+          </a>
+          <a
+            href="/tags"
+            class="inline-flex items-center justify-center px-6 py-3 border border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:text-zinc-300 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 font-medium rounded-lg transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-zinc-950 hover:scale-105"
+          >
+            تصفح حسب الموضوع
+          </a>
+        </div>
+      </div>
+    </div>
+  )}
+
+  <!-- Back to Home -->
+  <div class="text-center mt-12">
+    <a
+      href="/"
+      class="inline-flex items-center gap-2 px-4 py-2 text-zinc-600 dark:text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-zinc-950 rounded-md"
+    >
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+      </svg>
+      العودة للرئيسية
+    </a>
+  </div>
+</BaseLayout>
