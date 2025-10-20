@@ -1,6 +1,5 @@
 ---
 import SimpleThemeToggle from './SimpleThemeToggle.astro';
-import SearchBanner from './SearchBanner.jsx';
 
 // Navigation links for the site
 const navLinks = [
@@ -13,8 +12,7 @@ const currentPath = Astro.url.pathname;
 ---
 
 <header class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-zinc-200 dark:bg-zinc-950/80 dark:border-zinc-800 transition-colors duration-300">
-  <nav class="max-w-4xl mx-auto px-3 sm:px-4 md:px-6">
-    <!-- Top row: Site title, navigation, and theme toggle -->
+  <nav class="max-w-3xl mx-auto px-3 sm:px-4 md:px-6">
     <div class="flex items-center justify-between h-14 sm:h-16">
       <!-- Site Title -->
       <div class="flex-shrink-0 min-w-0">
@@ -52,11 +50,6 @@ const currentPath = Astro.url.pathname;
         <!-- Theme Toggle -->
         <SimpleThemeToggle />
       </div>
-    </div>
-
-    <!-- Search Banner Row -->
-    <div class="pb-3 sm:pb-4">
-      <SearchBanner client:load placeholder="ابحث في الأسئلة..." maxSuggestions={5} className="w-full" />
     </div>
   </nav>
 </header>
