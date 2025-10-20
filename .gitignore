@@ -40,3 +40,6 @@ Thumbs.db
 *.temp
 
 .vercel
+# data storage (keep structure, ignore content)
+data/*.json
+!data/.gitkeep
