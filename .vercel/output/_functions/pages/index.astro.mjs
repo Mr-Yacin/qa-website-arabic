@@ -1,8 +1,8 @@
 /* empty css                                 */
-import { c as createComponent, d as renderComponent, r as renderTemplate, m as maybeRenderHead, b as addAttribute } from '../chunks/astro/server_XoOAQYhS.mjs';
+import { c as createComponent, r as renderComponent, b as renderTemplate, m as maybeRenderHead, d as addAttribute } from '../chunks/astro/server_DYpdScgV.mjs';
 import 'kleur/colors';
-import { g as getCollection, $ as $$BaseLayout } from '../chunks/BaseLayout_hGb1rQGr.mjs';
-import { $ as $$CardQuestion } from '../chunks/CardQuestion_EBHpBolT.mjs';
+import { g as getCollection, $ as $$BaseLayout } from '../chunks/BaseLayout_yosFqUFg.mjs';
+import { $ as $$CardQuestion } from '../chunks/CardQuestion_15u53b_A.mjs';
 export { renderers } from '../renderers.mjs';
 
 const $$Index = createComponent(async ($$result, $$props, $$slots) => {
@@ -27,11 +27,11 @@ const $$Index = createComponent(async ($$result, $$props, $$slots) => {
         نقدم محتوى عالي الجودة يساعدك في رحلتك التعليمية والمهنية.
 </p> <div class="flex flex-col sm:flex-row gap-4 justify-center"> <a href="/tags" class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 transition-colors duration-200 shadow-lg hover:shadow-xl">
 تصفح المواضيع
-</a> <a href="/page/1" class="inline-flex items-center justify-center px-6 py-3 border border-zinc-300 dark:border-zinc-600 text-base font-medium rounded-lg text-zinc-700 dark:text-zinc-300 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors duration-200">
+</a> <a href="/questions" class="inline-flex items-center justify-center px-6 py-3 border border-zinc-300 dark:border-zinc-600 text-base font-medium rounded-lg text-zinc-700 dark:text-zinc-300 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors duration-200">
 جميع الأسئلة
 </a> </div> </div> </section>  <section class="mb-12"> <div class="flex items-center justify-between mb-8"> <h2 class="text-2xl md:text-3xl font-bold text-zinc-900 dark:text-zinc-100">
 أحدث الأسئلة
-</h2> <a href="/page/1" class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium transition-colors duration-200">
+</h2> <a href="/questions" class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium transition-colors duration-200">
 عرض الكل ←
 </a> </div> ${latestQuestions.length > 0 ? renderTemplate`<div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3"> ${latestQuestions.map((question) => renderTemplate`${renderComponent($$result2, "CardQuestion", $$CardQuestion, { "href": `/q/${question.slug}`, "title": question.data.question, "description": question.data.shortAnswer, "date": question.data.pubDate, "tags": question.data.tags, "difficulty": question.data.difficulty })}`)} </div>` : renderTemplate`<div class="text-center py-12"> <p class="text-zinc-500 dark:text-zinc-400 text-lg">
 لا توجد أسئلة متاحة حالياً
@@ -48,7 +48,7 @@ const $$Index = createComponent(async ($$result, $$props, $$slots) => {
 ابدأ رحلة التعلم الآن
 </h3> <p class="text-zinc-600 dark:text-zinc-300 mb-6">
 انضم إلى مجتمعنا واكتشف المزيد من الإجابات المفيدة والمحتوى التعليمي المتميز
-</p> <div class="flex flex-col sm:flex-row gap-3 justify-center"> <a href="/page/1" class="inline-flex items-center justify-center px-6 py-3 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white font-medium rounded-lg transition-colors duration-200 shadow-lg hover:shadow-xl">
+</p> <div class="flex flex-col sm:flex-row gap-3 justify-center"> <a href="/questions" class="inline-flex items-center justify-center px-6 py-3 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white font-medium rounded-lg transition-colors duration-200 shadow-lg hover:shadow-xl">
 استكشف الأسئلة
 </a> <a href="/tags" class="inline-flex items-center justify-center px-6 py-3 border border-indigo-300 dark:border-indigo-600 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 font-medium rounded-lg transition-colors duration-200">
 تصفح حسب الموضوع

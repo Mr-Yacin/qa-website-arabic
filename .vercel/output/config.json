@@ -9,9 +9,30 @@
 			"status": 308
 		},
 		{
+			"src": "/page/1/",
+			"headers": {
+				"Location": "/page/1"
+			},
+			"status": 308
+		},
+		{
+			"src": "/page/([^/]+?)/",
+			"headers": {
+				"Location": "/page/$1"
+			},
+			"status": 308
+		},
+		{
 			"src": "/q/([^/]+?)/",
 			"headers": {
 				"Location": "/q/$1"
+			},
+			"status": 308
+		},
+		{
+			"src": "/questions/",
+			"headers": {
+				"Location": "/questions"
 			},
 			"status": 308
 		},
@@ -56,7 +77,19 @@
 			"dest": "_render"
 		},
 		{
+			"src": "^\\/page\\/1$",
+			"dest": "_render"
+		},
+		{
+			"src": "^\\/page\\/([^/]+?)$",
+			"dest": "_render"
+		},
+		{
 			"src": "^\\/q\\/([^/]+?)$",
+			"dest": "_render"
+		},
+		{
+			"src": "^\\/questions$",
 			"dest": "_render"
 		},
 		{

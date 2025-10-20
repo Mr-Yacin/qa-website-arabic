@@ -1,0 +1,98 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import CardQuestion from '../components/CardQuestion.astro';
+import { paginate } from '../lib/paginate';
+
+// Get all Q&A entries and sort by publication date (newest first)
+const allQuestions = await getCollection('qa');
+const sortedQuestions = allQuestions.sort((a, b) => 
+  new Date(b.data.pubDate).getTime() - new Date(a.data.pubDate).getTime()
+);
+
+// Use pagination to get the first page (10 items)
+const paginationResult = paginate(sortedQuestions, 1, 10);
+
+// SEO meta data
+const title = 'جميع الأسئلة والأجوبة';
+const description = 'تصفح جميع الأسئلة والأجوبة المتاحة على الموقع. اكتشف المزيد من المحتوى التعليمي والإجابات المفيدة باللغة العربية.';
+---
+
+<BaseLayout title={title} description={description}>
+  <!-- Page Header -->
+  <div class="mb-8">
+    <div class="flex items-center justify-between mb-4">
+      <h1 class="text-3xl md:text-4xl font-bold text-zinc-900 dark:text-zinc-100">
+        جميع الأسئلة
+      </h1>
+      <div class="text-sm text-zinc-500 dark:text-zinc-400">
+        {paginationResult.total} سؤال
+      </div>
+    </div>
+    
+    <p class="text-zinc-600 dark:text-zinc-300 text-lg">
+      تصفح مجموعة شاملة من الأسئلة والأجوبة المفيدة في مختلف المجالات التقنية
+    </p>
+  </div>
+
+  <!-- Questions Grid -->
+  {paginationResult.items.length > 0 ? (
+    <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-12">
+      {paginationResult.items.map((question) => (
+        <CardQuestion
+          href={`/q/${question.slug}`}
+          title={question.data.question}
+          description={question.data.shortAnswer}
+          date={question.data.pubDate}
+          tags={question.data.tags}
+          difficulty={question.data.difficulty}
+        />
+      ))}
+    </div>
+  ) : (
+    <div class="text-center py-12">
+      <p class="text-zinc-500 dark:text-zinc-400 text-lg">
+        لا توجد أسئلة متاحة حالياً
+      </p>
+    </div>
+  )}
+
+  <!-- Pagination Link (if more than 10 questions) -->
+  {paginationResult.pages > 1 && (
+    <div class="text-center mb-12">
+      <div class="bg-zinc-50 dark:bg-zinc-800/50 rounded-lg p-6 border border-zinc-200 dark:border-zinc-700">
+        <h3 class="text-lg font-semibold text-zinc-900 dark:text-zinc-100 mb-2">
+          المزيد من الأسئلة
+        </h3>
+        <p class="text-zinc-600 dark:text-zinc-300 mb-4">
+          يوجد {paginationResult.total - 10} سؤال إضافي متاح للتصفح
+        </p>
+        <a 
+          href="/page/2"
+          class="inline-flex items-center justify-center px-6 py-3 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white font-medium rounded-lg transition-colors duration-200 shadow-lg hover:shadow-xl"
+        >
+          عرض المزيد من الأسئلة
+        </a>
+      </div>
+    </div>
+  )}
+
+  <!-- Additional Navigation -->
+  <div class="text-center">
+    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+      <a 
+        href="/tags" 
+        class="inline-flex items-center justify-center px-6 py-3 border border-zinc-300 dark:border-zinc-600 text-base font-medium rounded-lg text-zinc-700 dark:text-zinc-300 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors duration-200"
+      >
+        تصفح حسب الموضوع
+      </a>
+      <a 
+        href="/" 
+        class="inline-flex items-center justify-center px-6 py-3 border border-zinc-300 dark:border-zinc-600 text-base font-medium rounded-lg text-zinc-700 dark:text-zinc-300 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors duration-200"
+      >
+        العودة للرئيسية
+      </a>
+    </div>
+  </div>
+</BaseLayout>
+</content>

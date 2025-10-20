@@ -1,11 +1,11 @@
 /* empty css                                    */
-import { c as createComponent, a as createAstro, m as maybeRenderHead, b as addAttribute, r as renderTemplate, d as renderComponent, u as unescapeHTML } from '../../chunks/astro/server_XoOAQYhS.mjs';
+import { c as createComponent, a as createAstro, m as maybeRenderHead, d as addAttribute, b as renderTemplate, r as renderComponent, u as unescapeHTML } from '../../chunks/astro/server_DYpdScgV.mjs';
 import 'kleur/colors';
-import { g as getCollection, $ as $$BaseLayout } from '../../chunks/BaseLayout_hGb1rQGr.mjs';
+import { g as getCollection, $ as $$BaseLayout } from '../../chunks/BaseLayout_yosFqUFg.mjs';
 import 'clsx';
 import { jsxs, jsx } from 'react/jsx-runtime';
 import { useState, useEffect } from 'react';
-import { r as relatedByTags, $ as $$CardQuestion, f as formatDate } from '../../chunks/CardQuestion_EBHpBolT.mjs';
+import { r as relatedByTags, $ as $$CardQuestion, f as formatDate } from '../../chunks/CardQuestion_15u53b_A.mjs';
 export { renderers } from '../../renderers.mjs';
 
 const $$Astro$1 = createAstro();
