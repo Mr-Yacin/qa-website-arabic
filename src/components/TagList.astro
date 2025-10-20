@@ -1,0 +1,67 @@
+---
+export interface Props {
+  tags: string[];
+  showIcon?: boolean;
+  showLabel?: boolean;
+  linkable?: boolean;
+  maxTags?: number;
+  size?: 'sm' | 'md' | 'lg';
+  class?: string;
+}
+
+const { 
+  tags, 
+  showIcon = true, 
+  showLabel = true, 
+  linkable = true, 
+  maxTags,
+  size = 'md',
+  class: className = '' 
+} = Astro.props;
+
+const displayTags = maxTags ? tags.slice(0, maxTags) : tags;
+const remainingCount = maxTags && tags.length > maxTags ? tags.length - maxTags : 0;
+
+const sizeClasses = {
+  sm: 'text-xs px-2 py-0.5',
+  md: 'text-sm px-3 py-1',
+  lg: 'text-base px-4 py-2'
+};
+
+const tagClass = `inline-flex items-center rounded-md font-medium bg-indigo-100 text-indigo-800 hover:bg-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-300 dark:hover:bg-indigo-900/50 transition-colors ${sizeClasses[size]}`;
+---
+
+{tags.length > 0 && (
+  <div class={`flex flex-col gap-2 ${className}`}>
+    {showLabel && (
+      <div class="flex items-center gap-2">
+        {showIcon && (
+          <svg class="w-4 h-4 text-zinc-500 dark:text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+          </svg>
+        )}
+        <span class="text-sm text-zinc-600 dark:text-zinc-400">الوسوم:</span>
+      </div>
+    )}
+    
+    <div class="flex flex-wrap gap-2">
+      {displayTags.map((tag) => (
+        linkable ? (
+          <a href={`/tags/${tag}`} class={tagClass}>
+            #{tag}
+          </a>
+        ) : (
+          <span class={tagClass}>
+            #{tag}
+          </span>
+        )
+      ))}
+      
+      {remainingCount > 0 && (
+        <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium text-zinc-500 dark:text-zinc-400">
+          +{remainingCount}
+        </span>
+      )}
+    </div>
+  </div>
+)}

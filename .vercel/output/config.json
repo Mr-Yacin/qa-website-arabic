@@ -27,6 +27,10 @@
 			"dest": "_render"
 		},
 		{
+			"src": "^/test-components$",
+			"dest": "_render"
+		},
+		{
 			"src": "^/$",
 			"dest": "_render"
 		}
