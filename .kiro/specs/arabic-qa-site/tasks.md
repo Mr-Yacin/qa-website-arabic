@@ -53,7 +53,7 @@
   - Add API integration for POST requests to /api/rate endpoint
   - _Requirements: 5.4, 5.7, 12.5, 13.1, 13.2, 13.4_
 
-- [ ] 9. Build homepage and content discovery
+- [x] 9. Build homepage and content discovery
   - Create src/pages/index.astro with hero section and call-to-action
   - Display latest 6 questions using CardQuestion components
   - Implement popular tags section with top 10 tags by usage count
