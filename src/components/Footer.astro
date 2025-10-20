@@ -1,0 +1,32 @@
+---
+const currentYear = new Date().getFullYear();
+
+// Essential footer links
+const footerLinks = [
+  { href: '/rss.xml', label: 'RSS' },
+  { href: '/tags', label: 'الوسوم' },
+];
+---
+
+<footer class="mt-16 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900">
+  <div class="max-w-3xl mx-auto px-4 md:px-6 py-8">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <!-- Copyright -->
+      <div class="text-sm text-zinc-600 dark:text-zinc-400">
+        © {currentYear} موقع الأسئلة والأجوبة. جميع الحقوق محفوظة.
+      </div>
+
+      <!-- Essential Links -->
+      <div class="flex items-center space-x-6 space-x-reverse">
+        {footerLinks.map(({ href, label }) => (
+          <a
+            href={href}
+            class="text-sm text-zinc-600 dark:text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-zinc-900 rounded-sm px-2 py-1"
+          >
+            {label}
+          </a>
+        ))}
+      </div>
+    </div>
+  </div>
+</footer>

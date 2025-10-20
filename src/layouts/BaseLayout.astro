@@ -1,0 +1,48 @@
+---
+import SEO from '../components/SEO.astro';
+import Navbar from '../components/Navbar.astro';
+import Footer from '../components/Footer.astro';
+import '../styles/global.css';
+
+export interface Props {
+  title?: string;
+  description?: string;
+  ogImage?: string;
+  canonical?: string;
+  noindex?: boolean;
+}
+
+const {
+  title = 'موقع الأسئلة والأجوبة',
+  description = 'موقع متخصص في الأسئلة والأجوبة باللغة العربية، يقدم إجابات شاملة ومفيدة للمطورين والمهتمين بالتقنية.',
+  ogImage,
+  canonical,
+  noindex = false,
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <SEO 
+      title={title}
+      description={description}
+      ogImage={ogImage}
+      canonical={canonical}
+      noindex={noindex}
+    />
+  </head>
+  <body class="min-h-screen bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-50">
+    <div class="flex flex-col min-h-screen">
+      <Navbar />
+      
+      <main class="flex-1">
+        <div class="max-w-3xl mx-auto px-4 md:px-6 py-8">
+          <slot />
+        </div>
+      </main>
+      
+      <Footer />
+    </div>
+  </body>
+</html>

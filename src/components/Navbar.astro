@@ -1,0 +1,35 @@
+---
+// Navigation links for the site
+const navLinks = [
+  { href: '/', label: 'الرئيسية' },
+  { href: '/tags', label: 'الوسوم' },
+];
+---
+
+<header class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-zinc-200 dark:bg-zinc-950/80 dark:border-zinc-800">
+  <nav class="max-w-3xl mx-auto px-4 md:px-6">
+    <div class="flex items-center justify-between h-16">
+      <!-- Site Title -->
+      <div class="flex-shrink-0">
+        <a 
+          href="/" 
+          class="text-xl font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors"
+        >
+          موقع الأسئلة والأجوبة
+        </a>
+      </div>
+
+      <!-- Navigation Links -->
+      <div class="flex items-center space-x-6 space-x-reverse">
+        {navLinks.map(({ href, label }) => (
+          <a
+            href={href}
+            class="text-zinc-700 dark:text-zinc-300 hover:text-indigo-600 dark:hover:text-indigo-400 font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-zinc-950 rounded-sm px-2 py-1"
+          >
+            {label}
+          </a>
+        ))}
+      </div>
+    </div>
+  </nav>
+</header>

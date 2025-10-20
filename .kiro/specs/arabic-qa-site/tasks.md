@@ -33,7 +33,7 @@
   - Implement relatedByTags function to find related questions by tag overlap
   - _Requirements: 4.1, 4.2, 4.3, 4.4_
 
-- [ ] 6. Build core layout components
+- [x] 6. Build core layout components
   - Create BaseLayout.astro with HTML lang="ar" dir="rtl" and responsive container
   - Implement SEO.astro component with meta tags, canonical URLs, and Open Graph data
   - Build Navbar.astro with sticky header, site title, and navigation links
