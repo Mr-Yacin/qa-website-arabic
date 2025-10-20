@@ -1,28 +1,48 @@
 import React, { useState, useEffect } from 'react';
 
-export default function StarRating({ slug }) {
-  const [rating, setRating] = useState(0);
+export default function StarRating({ slug, initialData }) {
+  const [rating, setRating] = useState(initialData?.userRating || 0);
   const [hoveredRating, setHoveredRating] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [hasRated, setHasRated] = useState(false);
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [averageRating, setAverageRating] = useState(null);
-  const [voteCount, setVoteCount] = useState(0);
+  const [hasRated, setHasRated] = useState(Boolean(initialData?.userRating));
+  const [averageRating, setAverageRating] = useState(initialData?.average || null);
+  const [voteCount, setVoteCount] = useState(initialData?.count || 0);
   const [isUpdating, setIsUpdating] = useState(false);
 
   // Load existing rating data from server on component mount
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      loadExistingRating();
-      setIsLoaded(true);
+      // If we have initial data, use it and skip the API call for better performance
+      if (initialData && (initialData.average !== null || initialData.userRating !== null)) {
+        // Still sync with localStorage for consistency
+        if (initialData.userRating) {
+          localStorage.setItem(`rating:${slug}`, initialData.userRating.toString());
+        }
+      } else {
+        // No initial data, load from API
+        loadExistingRating();
+      }
       
-      // Hide the static fallback when React component loads
-      const fallback = document.querySelector('.rating-fallback');
-      if (fallback) {
-        fallback.style.display = 'none';
+      // Smooth transition from fallback to React component
+      const fallback = document.getElementById('rating-fallback');
+      const reactContainer = document.getElementById('rating-react');
+      
+      if (fallback && reactContainer) {
+        // Small delay to ensure React component is ready
+        setTimeout(() => {
+          // Fade out fallback
+          fallback.style.opacity = '0';
+          
+          // After fade out, replace with React component
+          setTimeout(() => {
+            fallback.style.display = 'none';
+            reactContainer.classList.remove('hidden');
+            reactContainer.style.opacity = '1';
+          }, 300);
+        }, 100);
       }
     }
-  }, [slug]);
+  }, [slug, initialData]);
 
   // Load existing user rating and average data from server
   const loadExistingRating = async () => {
@@ -154,7 +174,7 @@ export default function StarRating({ slug }) {
   };
 
   return (
-    <div className="flex flex-col items-center gap-3 p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-700 transition-colors duration-200">
+    <div className="flex flex-col items-center gap-3 p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-700 transition-colors duration-200 min-h-[140px] w-full max-w-md">
       <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100 transition-colors duration-200">
         قيم هذا السؤال
       </h3>
