@@ -1,19 +1,17 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
-
-import tailwindcss from '@tailwindcss/vite';
-
+import tailwind from '@astrojs/tailwind';
 import sitemap from '@astrojs/sitemap';
-
 import vercel from '@astrojs/vercel';
 
 // https://astro.build/config
 export default defineConfig({
   site: 'https://example.com',
   trailingSlash: 'never',
-  vite: {
-    plugins: [tailwindcss()],
-  },
-  integrations: [sitemap()],
+  output: 'server',
+  integrations: [
+    tailwind(),
+    sitemap()
+  ],
   adapter: vercel(),
 });

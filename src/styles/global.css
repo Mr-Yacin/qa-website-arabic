@@ -1,1 +1,106 @@
-@import 'tailwindcss';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Base typography and RTL styles */
+@layer base {
+  html {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans Arabic', sans-serif;
+    direction: rtl;
+  }
+  
+  body {
+    @apply min-h-screen bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-50;
+  }
+  
+  /* Smooth scrolling for anchor links */
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  /* Focus styles for accessibility */
+  *:focus-visible {
+    @apply outline-2 outline-offset-2 outline-primary-500;
+  }
+}
+
+/* Component layer for reusable patterns */
+@layer components {
+  /* Container styles */
+  .container {
+    @apply max-w-3xl mx-auto px-4 md:px-6;
+  }
+  
+  /* Button base styles */
+  .btn {
+    @apply inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50;
+  }
+  
+  .btn-primary {
+    @apply bg-primary-600 text-white hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600;
+  }
+  
+  .btn-secondary {
+    @apply bg-zinc-100 text-zinc-900 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700;
+  }
+  
+  /* Card styles */
+  .card {
+    @apply rounded-lg border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900;
+  }
+  
+  /* Link styles */
+  .link {
+    @apply text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 underline-offset-4 hover:underline;
+  }
+  
+  /* Tag/pill styles */
+  .tag {
+    @apply inline-flex items-center rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200;
+  }
+  
+  .tag-primary {
+    @apply bg-primary-100 text-primary-800 dark:bg-primary-900/30 dark:text-primary-300;
+  }
+}
+
+/* Utility layer for custom utilities */
+@layer utilities {
+  /* RTL-specific utilities */
+  .rtl-flip {
+    transform: scaleX(-1);
+  }
+  
+  /* Prose styles for Arabic content */
+  .prose-rtl {
+    @apply prose prose-zinc dark:prose-invert max-w-none;
+    direction: rtl;
+    text-align: right;
+  }
+  
+  .prose-rtl h1,
+  .prose-rtl h2,
+  .prose-rtl h3,
+  .prose-rtl h4,
+  .prose-rtl h5,
+  .prose-rtl h6 {
+    text-align: right;
+  }
+  
+  .prose-rtl ul,
+  .prose-rtl ol {
+    padding-right: 1.625em;
+    padding-left: 0;
+  }
+  
+  .prose-rtl blockquote {
+    border-right: 0.25rem solid #e4e4e7;
+    border-left: none;
+    padding-right: 1em;
+    padding-left: 0;
+  }
+  
+  .dark .prose-rtl blockquote {
+    border-right-color: #3f3f46;
+  }
+}
