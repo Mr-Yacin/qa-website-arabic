@@ -20,7 +20,7 @@
   - Create content directory structure in src/content/qa/
   - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.6_
 
-- [ ] 4. Create seed content and assets
+- [x] 4. Create seed content and assets
   - Write 3 example Markdown files: what-is-astro.md, when-to-use-astro.md, seo-for-qa-sites.md
   - Add valid frontmatter with varied tags and at least one heroImage
   - Ensure shortAnswer fields are ≤ 155 characters for SEO
