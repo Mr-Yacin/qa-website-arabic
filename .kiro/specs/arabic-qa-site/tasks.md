@@ -118,7 +118,7 @@
   - Add deployment instructions for Vercel with adapter configuration
   - _Requirements: 15.4, 15.5_
 
-- [ ] 18. Manual testing and validation
+- [x] 18. Manual testing and validation
   - Test homepage displays latest 6 questions and popular tags correctly
   - Verify question detail pages show all required elements and rating works
   - Confirm tag pages filter content correctly and pagination functions properly
