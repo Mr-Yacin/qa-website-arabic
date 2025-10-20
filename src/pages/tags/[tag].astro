@@ -1,0 +1,184 @@
+---
+import { getCollection } from 'astro:content';
+import type { GetStaticPaths } from 'astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import CardQuestion from '../../components/CardQuestion.astro';
+
+export const prerender = true;
+
+export const getStaticPaths: GetStaticPaths = async () => {
+  const allQuestions = await getCollection('qa');
+  
+  // Get all unique tags
+  const allTags = new Set<string>();
+  allQuestions.forEach(question => {
+    question.data.tags.forEach(tag => {
+      allTags.add(tag);
+    });
+  });
+
+  // Generate paths for each tag
+  return Array.from(allTags).map(tag => ({
+    params: { tag },
+  }));
+};
+
+const { tag } = Astro.params;
+
+if (!tag) {
+  return Astro.redirect('/tags');
+}
+
+// Get all questions and filter by tag
+const allQuestions = await getCollection('qa');
+const questionsWithTag = allQuestions
+  .filter(question => question.data.tags.includes(tag))
+  .sort((a, b) => {
+    // Sort by publication date in descending order (newest first)
+    return new Date(b.data.pubDate).getTime() - new Date(a.data.pubDate).getTime();
+  });
+
+// Calculate some statistics
+const totalQuestionsWithTag = questionsWithTag.length;
+const difficultyStats = questionsWithTag.reduce((acc, question) => {
+  acc[question.data.difficulty] = (acc[question.data.difficulty] || 0) + 1;
+  return acc;
+}, {} as Record<string, number>);
+
+// Get related tags (tags that appear with this tag)
+const relatedTags = new Map<string, number>();
+questionsWithTag.forEach(question => {
+  question.data.tags.forEach(otherTag => {
+    if (otherTag !== tag) {
+      relatedTags.set(otherTag, (relatedTags.get(otherTag) || 0) + 1);
+    }
+  });
+});
+
+const sortedRelatedTags = Array.from(relatedTags.entries())
+  .sort((a, b) => b[1] - a[1])
+  .slice(0, 8); // Show top 8 related tags
+
+const pageTitle = `وسم: ${tag}`;
+const questionCountText = totalQuestionsWithTag === 1 ? 'سؤال' : totalQuestionsWithTag === 2 ? 'سؤالان' : totalQuestionsWithTag <= 10 ? 'أسئلة' : 'سؤالاً';
+const pageDescription = `تصفح جميع الأسئلة المتعلقة بـ "${tag}". ${totalQuestionsWithTag} ${questionCountText} متاح في هذا الموضوع.`;
+---
+
+<BaseLayout 
+  title={pageTitle}
+  description={pageDescription}
+>
+  <div class="space-y-8">
+    <!-- Header Section -->
+    <div class="space-y-4">
+      <!-- Breadcrumb -->
+      <nav class="flex items-center space-x-2 text-sm text-zinc-500 dark:text-zinc-400" dir="ltr">
+        <a href="/" class="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">الرئيسية</a>
+        <span>/</span>
+        <a href="/tags" class="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">الوسوم</a>
+        <span>/</span>
+        <span class="text-zinc-900 dark:text-zinc-100">{tag}</span>
+      </nav>
+
+      <!-- Title and Description -->
+      <div class="space-y-3">
+        <h1 class="text-3xl md:text-4xl font-bold text-zinc-900 dark:text-zinc-100">
+          <span class="text-indigo-600 dark:text-indigo-400">#</span>{tag}
+        </h1>
+        <p class="text-lg text-zinc-600 dark:text-zinc-300">
+          {pageDescription}
+        </p>
+      </div>
+
+      <!-- Statistics -->
+      <div class="flex flex-wrap gap-4 text-sm">
+        <div class="flex items-center space-x-2 bg-zinc-100 dark:bg-zinc-900/50 px-3 py-1.5 rounded-full">
+          <span class="text-zinc-500 dark:text-zinc-400">المجموع:</span>
+          <span class="font-medium text-zinc-900 dark:text-zinc-100">{totalQuestionsWithTag}</span>
+        </div>
+        {Object.entries(difficultyStats).map(([difficulty, count]) => {
+          const labels = {
+            easy: 'سهل',
+            medium: 'متوسط', 
+            hard: 'صعب'
+          };
+          const colors = {
+            easy: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300',
+            medium: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300',
+            hard: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
+          };
+          return (
+            <div class={`flex items-center space-x-2 px-3 py-1.5 rounded-full ${colors[difficulty as keyof typeof colors]}`}>
+              <span>{labels[difficulty as keyof typeof labels]}:</span>
+              <span class="font-medium">{count}</span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+
+    <!-- Questions List -->
+    {questionsWithTag.length > 0 ? (
+      <div class="space-y-6">
+        <h2 class="text-xl font-semibold text-zinc-900 dark:text-zinc-100 border-b border-zinc-200 dark:border-zinc-800 pb-2">
+          الأسئلة ({totalQuestionsWithTag})
+        </h2>
+        
+        <div class="grid gap-6">
+          {questionsWithTag.map((question) => (
+            <CardQuestion
+              href={`/q/${question.slug}`}
+              title={question.data.question}
+              description={question.data.shortAnswer}
+              date={question.data.pubDate}
+              tags={question.data.tags}
+              difficulty={question.data.difficulty}
+            />
+          ))}
+        </div>
+      </div>
+    ) : (
+      <div class="text-center py-12">
+        <div class="text-zinc-400 dark:text-zinc-500 text-lg">
+          لا توجد أسئلة متاحة لهذا الوسم حالياً
+        </div>
+        <a 
+          href="/tags" 
+          class="inline-block mt-4 text-indigo-600 dark:text-indigo-400 hover:underline"
+        >
+          تصفح الوسوم الأخرى
+        </a>
+      </div>
+    )}
+
+    <!-- Related Tags -->
+    {sortedRelatedTags.length > 0 && (
+      <div class="space-y-4">
+        <h2 class="text-xl font-semibold text-zinc-900 dark:text-zinc-100 border-b border-zinc-200 dark:border-zinc-800 pb-2">
+          وسوم ذات صلة
+        </h2>
+        <div class="flex flex-wrap gap-2">
+          {sortedRelatedTags.map(([relatedTag, count]) => (
+            <a 
+              href={`/tags/${encodeURIComponent(relatedTag)}`}
+              class="inline-flex items-center px-3 py-2 rounded-full text-sm font-medium bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors"
+            >
+              #{relatedTag}
+              <span class="mr-1.5 text-xs opacity-75">({count})</span>
+            </a>
+          ))}
+        </div>
+      </div>
+    )}
+
+    <!-- Navigation -->
+    <div class="flex justify-center pt-8">
+      <a 
+        href="/tags" 
+        class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+      >
+        عرض جميع الوسوم
+      </a>
+    </div>
+  </div>
+</BaseLayout>
