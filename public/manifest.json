@@ -1,0 +1,22 @@
+{
+  "name": "موقع الأسئلة والأجوبة",
+  "short_name": "أسئلة وأجوبة",
+  "description": "موقع متخصص في الأسئلة والأجوبة باللغة العربية",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fafafa",
+  "theme_color": "#4f46e5",
+  "orientation": "portrait",
+  "dir": "rtl",
+  "lang": "ar",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["education", "reference"],
+  "screenshots": []
+}

@@ -4,6 +4,7 @@ import Navbar from '../components/Navbar.astro';
 import Footer from '../components/Footer.astro';
 import BackToTop from '../components/BackToTop.astro';
 import '../styles/global.css';
+import '../styles/debug-colors.css';
 
 export interface Props {
   title?: string;
@@ -32,6 +33,17 @@ const {
       canonical={canonical}
       noindex={noindex}
     />
+    
+    <!-- Performance optimizations -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+    
+    <!-- Critical resource hints -->
+    <link rel="preload" href="/favicon.svg" as="image" type="image/svg+xml">
+    
+    <!-- Optimize font loading -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;500;600;700&display=swap"></noscript>
     <!-- Theme initialization script - runs before page render -->
     <script>
       // Prevent flash of unstyled content by applying theme class early
@@ -59,7 +71,7 @@ const {
       })();
     </script>
   </head>
-  <body class="min-h-screen bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-50 transition-colors duration-300">
+  <body class="min-h-screen bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-50">
     <!-- Skip to main content for screen readers -->
     <a href="#main-content" class="skip-to-main">تخطي إلى المحتوى الرئيسي</a>
     
@@ -67,7 +79,7 @@ const {
       <Navbar />
       
       <main id="main-content" class="flex-1" tabindex="-1">
-        <div class="max-w-3xl mx-auto px-4 md:px-6 py-8">
+        <div class="max-w-3xl mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8">
           <slot />
         </div>
       </main>

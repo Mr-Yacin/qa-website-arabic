@@ -53,7 +53,7 @@ const difficultyColors = {
 const pageTitle = `${question} - موقع الأسئلة والأجوبة`;
 const pageDescription = shortAnswer;
 
-// Structured data for FAQPage and BlogPosting
+// Enhanced structured data for better SEO
 const faqStructuredData = {
   "@context": "https://schema.org",
   "@type": "FAQPage",
@@ -62,7 +62,19 @@ const faqStructuredData = {
     "name": question,
     "acceptedAnswer": {
       "@type": "Answer",
-      "text": shortAnswer
+      "text": shortAnswer,
+      "dateCreated": pubDate.toISOString(),
+      "upvoteCount": 0,
+      "author": {
+        "@type": "Organization",
+        "name": "موقع الأسئلة والأجوبة"
+      }
+    },
+    "answerCount": 1,
+    "dateCreated": pubDate.toISOString(),
+    "author": {
+      "@type": "Organization", 
+      "name": "موقع الأسئلة والأجوبة"
     }
   }
 };
@@ -76,14 +88,53 @@ const blogPostingStructuredData = {
   "dateModified": updatedDate ? updatedDate.toISOString() : pubDate.toISOString(),
   "author": {
     "@type": "Organization",
-    "name": "موقع الأسئلة والأجوبة"
+    "name": "موقع الأسئلة والأجوبة",
+    "url": Astro.site?.toString()
   },
   "publisher": {
     "@type": "Organization", 
-    "name": "موقع الأسئلة والأجوبة"
+    "name": "موقع الأسئلة والأجوبة",
+    "url": Astro.site?.toString(),
+    "logo": {
+      "@type": "ImageObject",
+      "url": new URL('/favicon.svg', Astro.site).toString()
+    }
   },
   "keywords": tags.join(", "),
-  "articleSection": "أسئلة وأجوبة"
+  "articleSection": "أسئلة وأجوبة",
+  "wordCount": shortAnswer.length,
+  "inLanguage": "ar",
+  "isAccessibleForFree": true,
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": new URL(Astro.url.pathname, Astro.site).toString()
+  }
+};
+
+// Add breadcrumb structured data
+const breadcrumbStructuredData = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "الرئيسية",
+      "item": Astro.site?.toString()
+    },
+    {
+      "@type": "ListItem", 
+      "position": 2,
+      "name": "الأسئلة",
+      "item": new URL('/questions', Astro.site).toString()
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": question,
+      "item": new URL(Astro.url.pathname, Astro.site).toString()
+    }
+  ]
 };
 ---
 
@@ -92,54 +143,55 @@ const blogPostingStructuredData = {
   description={pageDescription}
   ogImage={heroImage}
 >
-  <!-- Structured Data -->
+  <!-- Enhanced Structured Data for SEO -->
   <script type="application/ld+json" set:html={JSON.stringify(faqStructuredData)} is:inline />
   <script type="application/ld+json" set:html={JSON.stringify(blogPostingStructuredData)} is:inline />
+  <script type="application/ld+json" set:html={JSON.stringify(breadcrumbStructuredData)} is:inline />
 
   <!-- Breadcrumbs at the top before title -->
   <Breadcrumbs items={breadcrumbItems} class="mb-6" />
 
-  <article class="space-y-8">
+  <article class="space-y-8 text-zinc-900 dark:text-zinc-100">
     <!-- Question Header -->
     <header class="space-y-4">
-      <h1 class="text-3xl md:text-4xl font-bold text-zinc-900 dark:text-zinc-100 leading-tight">
+      <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-zinc-900 dark:text-zinc-100 leading-tight break-words">
         {question}
       </h1>
       
       <!-- Metadata -->
-      <div class="flex flex-wrap items-center gap-4 text-sm text-zinc-600 dark:text-zinc-400">
-        <div class="flex items-center gap-2">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div class="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-zinc-600 dark:text-zinc-400">
+        <div class="flex items-center gap-1 sm:gap-2">
+          <svg class="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
-          <time datetime={pubDate.toISOString()}>
-            نُشر في {formatDate(pubDate)}
+          <time datetime={pubDate.toISOString()} class="truncate">
+            <span class="hidden sm:inline">نُشر في </span>{formatDate(pubDate)}
           </time>
         </div>
         
         {updatedDate && (
-          <div class="flex items-center gap-2">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="flex items-center gap-1 sm:gap-2">
+            <svg class="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
-            <time datetime={updatedDate.toISOString()}>
-              آخر تحديث {formatDate(updatedDate)}
+            <time datetime={updatedDate.toISOString()} class="truncate">
+              <span class="hidden sm:inline">آخر تحديث </span>{formatDate(updatedDate)}
             </time>
           </div>
         )}
         
-        <span class={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${difficultyColors[difficulty]}`}>
+        <span class={`inline-flex items-center px-2 sm:px-2.5 py-0.5 rounded-full text-xs font-medium ${difficultyColors[difficulty]} flex-shrink-0`}>
           {difficultyLabels[difficulty]}
         </span>
       </div>
 
       <!-- Tags -->
       {tags.length > 0 && (
-        <div class="flex flex-wrap gap-2">
+        <div class="flex flex-wrap gap-1.5 sm:gap-2">
           {tags.map((tag) => (
             <a 
               href={`/tags/${tag}`}
-              class="inline-flex items-center px-3 py-1 rounded-md text-sm font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300 hover:bg-indigo-200 dark:hover:bg-indigo-900/50 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-zinc-950 hover:scale-105"
+              class="inline-flex items-center px-2 sm:px-3 py-1 rounded-md text-xs sm:text-sm font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300 hover:bg-indigo-200 dark:hover:bg-indigo-900/50 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-zinc-950 hover:scale-105 break-words"
               aria-label={`عرض جميع الأسئلة المتعلقة بوسم ${tag}`}
             >
               #{tag}
@@ -164,14 +216,14 @@ const blogPostingStructuredData = {
     />
 
     <!-- Short Answer Highlight -->
-    <div class="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg p-6">
-      <h2 class="text-lg font-semibold text-indigo-900 dark:text-indigo-100 mb-3 flex items-center gap-2">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div class="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg p-4 sm:p-6">
+      <h2 class="text-base sm:text-lg font-semibold text-indigo-900 dark:text-indigo-100 mb-3 flex items-center gap-2">
+        <svg class="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
         </svg>
         الإجابة المختصرة
       </h2>
-      <p class="text-indigo-800 dark:text-indigo-200 text-lg leading-relaxed">
+      <p class="text-indigo-800 dark:text-indigo-200 text-base sm:text-lg leading-relaxed break-words">
         {shortAnswer}
       </p>
     </div>
@@ -182,20 +234,31 @@ const blogPostingStructuredData = {
     </div>
 
     <!-- Detailed Content -->
-    <div class="prose prose-lg prose-zinc dark:prose-invert max-w-none prose-headings:text-zinc-900 dark:prose-headings:text-zinc-100 prose-p:text-zinc-700 dark:prose-p:text-zinc-300 prose-a:text-indigo-600 dark:prose-a:text-indigo-400 prose-strong:text-zinc-900 dark:prose-strong:text-zinc-100">
-      <Content />
+    <div class="content-area bg-white dark:bg-zinc-900 rounded-lg p-4 sm:p-6 border border-zinc-200 dark:border-zinc-800">
+      <div class="prose prose-base sm:prose-lg prose-zinc dark:prose-invert max-w-none force-visible
+                  prose-headings:text-zinc-900 dark:prose-headings:text-zinc-100 
+                  prose-p:text-zinc-700 dark:prose-p:text-zinc-300 
+                  prose-a:text-indigo-600 dark:prose-a:text-indigo-400 
+                  prose-strong:text-zinc-900 dark:prose-strong:text-zinc-100
+                  prose-li:text-zinc-700 dark:prose-li:text-zinc-300
+                  prose-blockquote:text-zinc-600 dark:prose-blockquote:text-zinc-400
+                  prose-code:text-zinc-800 dark:prose-code:text-zinc-200
+                  text-zinc-700 dark:text-zinc-300
+                  break-words overflow-wrap-anywhere">
+        <Content />
+      </div>
     </div>
 
     <!-- Related Questions -->
     {relatedQuestions.length > 0 && (
       <section class="border-t border-zinc-200 dark:border-zinc-800 pt-8">
-        <h2 class="text-2xl font-bold text-zinc-900 dark:text-zinc-100 mb-6 flex items-center gap-2">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <h2 class="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-zinc-100 mb-4 sm:mb-6 flex items-center gap-2">
+          <svg class="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
           </svg>
           أسئلة ذات صلة
         </h2>
-        <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div class="grid gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {relatedQuestions.map((relatedQuestion) => (
             <CardQuestion
               href={`/q/${relatedQuestion.slug}`}

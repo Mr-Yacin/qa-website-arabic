@@ -1,0 +1,55 @@
+/* Debug styles to verify color contrast - remove in production */
+
+/* Light mode colors */
+.debug-light {
+  background-color: #fafafa !important; /* zinc-50 */
+  color: #18181b !important; /* zinc-900 */
+}
+
+.debug-light .prose {
+  color: #3f3f46 !important; /* zinc-700 */
+}
+
+.debug-light .prose h1,
+.debug-light .prose h2,
+.debug-light .prose h3 {
+  color: #18181b !important; /* zinc-900 */
+}
+
+/* Dark mode colors */
+.debug-dark {
+  background-color: #09090b !important; /* zinc-950 */
+  color: #fafafa !important; /* zinc-50 */
+}
+
+.debug-dark .prose {
+  color: #d4d4d8 !important; /* zinc-300 */
+}
+
+.debug-dark .prose h1,
+.debug-dark .prose h2,
+.debug-dark .prose h3 {
+  color: #fafafa !important; /* zinc-100 */
+}
+
+/* Content area specific */
+.content-area {
+  background: white;
+  color: #3f3f46; /* zinc-700 */
+  border: 1px solid #e4e4e7; /* zinc-200 */
+}
+
+.dark .content-area {
+  background: #18181b; /* zinc-900 */
+  color: #d4d4d8; /* zinc-300 */
+  border-color: #27272a; /* zinc-800 */
+}
+
+/* Force text visibility */
+.force-visible {
+  color: #000 !important;
+}
+
+.dark .force-visible {
+  color: #fff !important;
+}

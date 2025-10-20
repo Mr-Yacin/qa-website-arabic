@@ -46,5 +46,17 @@ const ogImageURL = ogImage || new URL('/favicon.svg', Astro.site);
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta charset="UTF-8" />
 
-<!-- Favicon -->
+<!-- Favicon and app icons -->
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="apple-touch-icon" href="/favicon.svg" />
+<link rel="manifest" href="/manifest.json" />
+
+<!-- Additional SEO meta tags -->
+<meta name="theme-color" content="#4f46e5" />
+<meta name="color-scheme" content="light dark" />
+
+<!-- Performance hints -->
+<meta name="format-detection" content="telephone=no" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
