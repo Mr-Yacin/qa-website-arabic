@@ -91,7 +91,7 @@
   - Ensure sitemap generation includes all pages via @astrojs/sitemap integration
   - _Requirements: 11.1, 11.2, 11.3, 11.4, 11.5_
 
-- [ ] 14. Implement API endpoints for rating functionality
+- [x] 14. Implement API endpoints for rating functionality
   - Create src/pages/api/rate.ts POST endpoint with slug validation and rating processing
   - Build src/pages/api/avg.ts GET endpoint for average rating retrieval
   - Add proper error handling and response formatting for both endpoints
