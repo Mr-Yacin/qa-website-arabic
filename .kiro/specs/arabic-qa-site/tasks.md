@@ -14,7 +14,7 @@
   - Create global CSS file with Tailwind imports and base typography styles
   - _Requirements: 1.6, 1.7, 2.1, 2.2, 2.3, 2.4, 2.6_
 
-- [ ] 3. Set up content collections and schema
+- [x] 3. Set up content collections and schema
   - Create src/content/config.ts with qa collection schema using Zod validation
   - Define content collection schema with question, shortAnswer (155 chars), dates, tags, difficulty, and heroImage fields
   - Create content directory structure in src/content/qa/
