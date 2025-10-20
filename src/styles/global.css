@@ -2,29 +2,29 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Critical CSS - Inlined for performance */
+/* Non-critical CSS - Loaded after critical styles */
 @layer base {
   /* Font loading optimization */
   @font-face {
     font-family: 'Noto Sans Arabic';
     font-style: normal;
     font-weight: 400;
-    font-display: swap; /* Improve font loading performance */
+    font-display: swap;
     src: local('Noto Sans Arabic'), local('NotoSansArabic');
   }
 
+  /* Base styles - moved critical ones to inline CSS */
   html {
     font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans Arabic', sans-serif;
     direction: rtl;
-    /* Improve text rendering */
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    scroll-behavior: smooth;
   }
   
   body {
     @apply min-h-screen bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-50;
-    /* Improve scrolling performance */
     overflow-x: hidden;
   }
   

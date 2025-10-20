@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 
 export default function StarRating({ slug }) {
   const [rating, setRating] = useState(0);
   const [hoveredRating, setHoveredRating] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasRated, setHasRated] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   // Load saved rating from localStorage on component mount
   useEffect(() => {
@@ -16,6 +17,13 @@ export default function StarRating({ slug }) {
           setRating(parsedRating);
           setHasRated(true);
         }
+      }
+      setIsLoaded(true);
+      
+      // Hide the static fallback when React component loads
+      const fallback = document.querySelector('.rating-fallback');
+      if (fallback) {
+        fallback.style.display = 'none';
       }
     }
   }, [slug]);

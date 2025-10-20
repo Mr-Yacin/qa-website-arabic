@@ -27,10 +27,7 @@ export default defineConfig({
         }
       }
     }),
-    react({
-      // Optimize React for production
-      experimentalReactChildren: true
-    })
+    react()
   ],
   adapter: vercel({
     // Vercel-specific optimizations
@@ -45,7 +42,8 @@ export default defineConfig({
   // Performance optimizations
   vite: {
     build: {
-      // Optimize bundle splitting
+      // Disable CSS code splitting to prevent 404 issues
+      cssCodeSplit: false,
       rollupOptions: {
         output: {
           manualChunks: {
@@ -62,13 +60,13 @@ export default defineConfig({
   
   // Experimental features for better performance
   experimental: {
-    contentCollectionCache: true,
+    // contentCollectionCache: true, // Removed as it might be outdated
   },
   
   // Build optimizations
   build: {
-    // Inline small assets for better performance
-    inlineStylesheets: 'auto',
+    // Force inline all stylesheets to prevent 404 errors
+    inlineStylesheets: 'always',
   },
   
   // Image optimization

@@ -106,7 +106,8 @@ export function preloadCriticalResources() {
   document.head.appendChild(fontLink);
 
   // Preload critical images (hero images, logos, etc.)
-  const criticalImages = ['/favicon.svg'];
+  // Note: favicon.svg is already preloaded in BaseLayout.astro
+  const criticalImages: string[] = [];
   
   criticalImages.forEach((src) => {
     const link = document.createElement('link');

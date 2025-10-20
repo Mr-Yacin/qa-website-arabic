@@ -2,6 +2,22 @@
 export default {
   content: ['./src/**/*.{astro,html,js,jsx,md,mdx,svelte,ts,tsx,vue}'],
   darkMode: 'class', // Use class-based dark mode for better control
+  
+  // Optimize for production
+  future: {
+    hoverOnlyWhenSupported: true,
+  },
+  
+  // Remove unused utilities to reduce CSS size
+  corePlugins: {
+    // Disable unused features
+    container: false,
+    float: false,
+    clear: false,
+    skew: false,
+    caretColor: false,
+    sepia: false,
+  },
   theme: {
     extend: {
       colors: {

@@ -16,6 +16,9 @@ const canonicalURL = canonical || new URL(Astro.url.pathname, Astro.site);
 const ogImageURL = ogImage || new URL('/favicon.svg', Astro.site);
 ---
 
+<!-- Charset must be first for proper encoding -->
+<meta charset="UTF-8" />
+
 <!-- Primary Meta Tags -->
 <title>{title}</title>
 <meta name="title" content={title} />
@@ -44,7 +47,6 @@ const ogImageURL = ogImage || new URL('/favicon.svg', Astro.site);
 
 <!-- Viewport -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<meta charset="UTF-8" />
 
 <!-- Favicon and app icons -->
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -60,3 +62,7 @@ const ogImageURL = ogImage || new URL('/favicon.svg', Astro.site);
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+
+<!-- Resource hints for better performance -->
+<link rel="dns-prefetch" href="//fonts.googleapis.com" />
+<link rel="dns-prefetch" href="//fonts.gstatic.com" />
