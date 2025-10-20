@@ -3,7 +3,7 @@ export async function GET() {
 User-agent: *
 Allow: /
 
-Sitemap: https://example.com/sitemap-index.xml
+Sitemap: https://soaale.com/sitemap-index.xml
 `.trim();
 
   return new Response(robotsTxt, {
