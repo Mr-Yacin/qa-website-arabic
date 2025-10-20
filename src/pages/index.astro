@@ -5,8 +5,9 @@ import CardQuestion from '../components/CardQuestion.astro';
 
 // Get all Q&A entries and sort by publication date (newest first)
 const allQuestions = await getCollection('qa');
-const sortedQuestions = allQuestions.sort((a, b) => 
-  new Date(b.data.pubDate).getTime() - new Date(a.data.pubDate).getTime()
+const sortedQuestions = allQuestions.sort(
+  (a, b) =>
+    new Date(b.data.pubDate).getTime() - new Date(a.data.pubDate).getTime()
 );
 
 // Get latest 6 questions for homepage display
@@ -14,8 +15,8 @@ const latestQuestions = sortedQuestions.slice(0, 6);
 
 // Calculate popular tags (top 10 by usage count)
 const tagCounts = new Map<string, number>();
-allQuestions.forEach(question => {
-  question.data.tags.forEach(tag => {
+allQuestions.forEach((question) => {
+  question.data.tags.forEach((tag) => {
     tagCounts.set(tag, (tagCounts.get(tag) || 0) + 1);
   });
 });
@@ -28,32 +29,44 @@ const popularTags = Array.from(tagCounts.entries())
 
 // SEO meta data for homepage
 const title = 'موقع الأسئلة والأجوبة - إجابات شاملة باللغة العربية';
-const description = 'موقع متخصص في الأسئلة والأجوبة باللغة العربية، يقدم إجابات شاملة ومفيدة للمطورين والمهتمين بالتقنية. اكتشف أحدث الأسئلة والمواضيع الشائعة.';
+const description =
+  'موقع متخصص في الأسئلة والأجوبة باللغة العربية، يقدم إجابات شاملة ومفيدة للمطورين والمهتمين بالتقنية. اكتشف أحدث الأسئلة والمواضيع الشائعة.';
 ---
 
 <BaseLayout title={title} description={description}>
   <!-- Hero Section -->
   <section class="text-center mb-12">
     <div class="max-w-2xl mx-auto">
-      <h1 class="text-4xl md:text-5xl font-bold text-zinc-900 dark:text-zinc-100 mb-6">
+      <h1
+        class="mx-auto max-w-3xl text-center font-extrabold
+         text-[clamp(2rem,6vw,3.25rem)] leading-tight tracking-tight
+         text-zinc-900 dark:text-zinc-100 mb-6"
+      >
         مرحباً بك في موقع
-        <span class="text-indigo-600 dark:text-indigo-400">الأسئلة والأجوبة</span>
+        <span
+          class="bg-gradient-to-tr from-indigo-600 via-indigo-500 to-sky-500
+           bg-clip-text text-transparent dark:from-indigo-400 dark:via-indigo-300 dark:to-sky-400"
+        >
+          الأسئلة والأجوبة
+        </span>
       </h1>
-      
-      <p class="text-lg md:text-xl text-zinc-600 dark:text-zinc-300 mb-8 leading-loose max-w-3xl mx-auto">
-        اكتشف إجابات شاملة ومفيدة لأسئلتك التقنية باللغة العربية. 
-        نقدم محتوى عالي الجودة يساعدك في رحلتك التعليمية والمهنية.
+
+      <p
+        class="text-lg md:text-xl text-zinc-600 dark:text-zinc-300 mb-8 leading-loose max-w-3xl mx-auto"
+      >
+        اكتشف إجابات شاملة ومفيدة لأسئلتك التقنية باللغة العربية. نقدم محتوى
+        عالي الجودة يساعدك في رحلتك التعليمية والمهنية.
       </p>
-      
+
       <div class="flex flex-col sm:flex-row gap-4 justify-center">
-        <a 
-          href="/tags" 
+        <a
+          href="/tags"
           class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 transition-all duration-200 shadow-lg hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-zinc-950 hover:scale-105"
         >
           تصفح المواضيع
         </a>
-        <a 
-          href="/questions" 
+        <a
+          href="/questions"
           class="inline-flex items-center justify-center px-6 py-3 border border-zinc-300 dark:border-zinc-600 text-base font-medium rounded-lg text-zinc-700 dark:text-zinc-300 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-zinc-950 hover:scale-105"
         >
           جميع الأسئلة
@@ -65,111 +78,143 @@ const description = 'موقع متخصص في الأسئلة والأجوبة ب
   <!-- Latest Questions Section -->
   <section class="mb-12">
     <div class="flex items-center justify-between mb-8">
-      <h2 class="text-2xl md:text-3xl font-bold text-zinc-900 dark:text-zinc-100">
+      <h2
+        class="text-2xl md:text-3xl font-bold text-zinc-900 dark:text-zinc-100"
+      >
         أحدث الأسئلة
       </h2>
-      <a 
-        href="/questions" 
+      <a
+        href="/questions"
         class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-200 dark:hover:bg-indigo-900/50 font-medium rounded-lg transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-zinc-950 hover:scale-105 text-sm"
       >
         <span>عرض الكل</span>
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        <svg
+          class="w-4 h-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M15 19l-7-7 7-7"></path>
         </svg>
       </a>
     </div>
-    
-    {latestQuestions.length > 0 ? (
-      <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {latestQuestions.map((question) => (
-          <CardQuestion
-            href={`/q/${question.slug}`}
-            title={question.data.question}
-            description={question.data.shortAnswer}
-            date={question.data.pubDate}
-            tags={question.data.tags}
-            difficulty={question.data.difficulty}
-          />
-        ))}
-      </div>
-    ) : (
-      <div class="text-center py-12">
-        <p class="text-zinc-500 dark:text-zinc-400 text-lg">
-          لا توجد أسئلة متاحة حالياً
-        </p>
-      </div>
-    )}
+
+    {
+      latestQuestions.length > 0 ? (
+        <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {latestQuestions.map((question) => (
+            <CardQuestion
+              href={`/q/${question.slug}`}
+              title={question.data.question}
+              description={question.data.shortAnswer}
+              date={question.data.pubDate}
+              tags={question.data.tags}
+              difficulty={question.data.difficulty}
+            />
+          ))}
+        </div>
+      ) : (
+        <div class="text-center py-12">
+          <p class="text-zinc-500 dark:text-zinc-400 text-lg">
+            لا توجد أسئلة متاحة حالياً
+          </p>
+        </div>
+      )
+    }
   </section>
 
   <!-- Popular Tags Section -->
   <section class="mb-12">
     <div class="mb-8">
-      <h2 class="text-2xl md:text-3xl font-bold text-zinc-900 dark:text-zinc-100 mb-4">
+      <h2
+        class="text-2xl md:text-3xl font-bold text-zinc-900 dark:text-zinc-100 mb-4"
+      >
         المواضيع الشائعة
       </h2>
       <p class="text-zinc-600 dark:text-zinc-300">
         اكتشف أكثر المواضيع بحثاً واهتماماً من قبل المجتمع
       </p>
     </div>
-    
-    {popularTags.length > 0 ? (
-      <div class="flex flex-wrap gap-3">
-        {popularTags.map(({ tag, count }) => (
-          <a 
-            href={`/tags/${tag}`}
-            class="group inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg hover:border-indigo-300 dark:hover:border-indigo-600 hover:shadow-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-zinc-950 hover:scale-110"
-            aria-label={`عرض جميع الأسئلة المتعلقة بوسم ${tag} (${count} سؤال)`}
+
+    {
+      popularTags.length > 0 ? (
+        <div class="flex flex-wrap gap-3">
+          {popularTags.map(({ tag, count }) => (
+            <a
+              href={`/tags/${tag}`}
+              class="group inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg hover:border-indigo-300 dark:hover:border-indigo-600 hover:shadow-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-zinc-950 hover:scale-110"
+              aria-label={`عرض جميع الأسئلة المتعلقة بوسم ${tag} (${count} سؤال)`}
+            >
+              <span class="text-zinc-700 dark:text-zinc-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 font-medium">
+                #{tag}
+              </span>
+              <span class="text-xs text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-700 px-2 py-1 rounded-full">
+                {count}
+              </span>
+            </a>
+          ))}
+        </div>
+      ) : (
+        <div class="text-center py-8">
+          <p class="text-zinc-500 dark:text-zinc-400">
+            لا توجد وسوم متاحة حالياً
+          </p>
+        </div>
+      )
+    }
+
+    {
+      popularTags.length > 0 && (
+        <div class="mt-6 text-center">
+          <a
+            href="/tags"
+            class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-200 dark:hover:bg-indigo-900/50 font-medium rounded-lg transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-zinc-950 hover:scale-105 text-sm"
           >
-            <span class="text-zinc-700 dark:text-zinc-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 font-medium">
-              #{tag}
-            </span>
-            <span class="text-xs text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-700 px-2 py-1 rounded-full">
-              {count}
-            </span>
+            <span>عرض جميع المواضيع</span>
+            <svg
+              class="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M15 19l-7-7 7-7"
+              />
+            </svg>
           </a>
-        ))}
-      </div>
-    ) : (
-      <div class="text-center py-8">
-        <p class="text-zinc-500 dark:text-zinc-400">
-          لا توجد وسوم متاحة حالياً
-        </p>
-      </div>
-    )}
-    
-    {popularTags.length > 0 && (
-      <div class="mt-6 text-center">
-        <a 
-          href="/tags" 
-          class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-200 dark:hover:bg-indigo-900/50 font-medium rounded-lg transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-zinc-950 hover:scale-105 text-sm"
-        >
-          <span>عرض جميع المواضيع</span>
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-          </svg>
-        </a>
-      </div>
-    )}
+        </div>
+      )
+    }
   </section>
 
   <!-- Call to Action Section -->
-  <section class="text-center py-12 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/30 rounded-2xl border border-indigo-100 dark:border-indigo-800/50">
+  <section
+    class="text-center py-12 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/30 rounded-2xl border border-indigo-100 dark:border-indigo-800/50"
+  >
     <div class="max-w-xl mx-auto px-6">
       <h3 class="text-2xl font-bold text-zinc-900 dark:text-zinc-100 mb-4">
         ابدأ رحلة التعلم الآن
       </h3>
       <p class="text-zinc-600 dark:text-zinc-300 mb-6">
-        انضم إلى مجتمعنا واكتشف المزيد من الإجابات المفيدة والمحتوى التعليمي المتميز
+        انضم إلى مجتمعنا واكتشف المزيد من الإجابات المفيدة والمحتوى التعليمي
+        المتميز
       </p>
       <div class="flex flex-col sm:flex-row gap-3 justify-center">
-        <a 
-          href="/questions" 
+        <a
+          href="/questions"
           class="inline-flex items-center justify-center px-8 py-4 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white font-semibold text-lg rounded-lg transition-all duration-200 shadow-xl hover:shadow-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-zinc-950 hover:scale-110"
         >
           استكشف الأسئلة
         </a>
-        <a 
-          href="/tags" 
+        <a
+          href="/tags"
           class="inline-flex items-center justify-center px-6 py-3 border border-indigo-300 dark:border-indigo-600 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 font-medium rounded-lg transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-zinc-950 hover:scale-105"
         >
           تصفح حسب الموضوع
