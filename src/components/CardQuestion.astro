@@ -49,7 +49,7 @@ const difficultyLabels = {
     </div>
 
     <!-- Title -->
-    <h3 class="text-lg font-semibold text-zinc-900 dark:text-zinc-100 mb-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-2">
+    <h3 class="text-lg font-semibold text-zinc-950 dark:text-zinc-50 mb-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-2">
       {title}
     </h3>
 
@@ -62,7 +62,7 @@ const difficultyLabels = {
     {tags.length > 0 && (
       <div class="flex flex-wrap gap-2 mt-auto">
         {tags.slice(0, 4).map((tag) => (
-          <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 group-hover:bg-indigo-100 dark:group-hover:bg-indigo-900/30 transition-colors duration-200">
+          <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 group-hover:bg-indigo-100 dark:group-hover:bg-indigo-900/30 transition-all duration-200 group-hover:scale-105">
             #{tag}
           </span>
         ))}
