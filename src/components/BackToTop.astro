@@ -5,7 +5,7 @@
 <button
   id="back-to-top"
   type="button"
-  class="fixed bottom-6 left-6 z-50 p-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full shadow-lg hover:shadow-xl transform transition-all duration-300 opacity-0 translate-y-4 pointer-events-none focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-zinc-950"
+  class="fixed bottom-6 left-6 z-50 p-3 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white rounded-full shadow-lg hover:shadow-xl transform transition-all duration-300 opacity-0 translate-y-4 pointer-events-none focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-zinc-950 will-change-transform will-change-opacity"
   aria-label="العودة إلى أعلى الصفحة"
   title="العودة إلى أعلى الصفحة"
 >
@@ -15,19 +15,38 @@
 </button>
 
 <script>
-  // Back to top functionality
+  // Back to top functionality with performance optimizations
   function initBackToTop() {
     const backToTopButton = document.getElementById('back-to-top');
     if (!backToTopButton) return;
 
-    // Show/hide button based on scroll position
+    let isVisible = false;
+    let ticking = false;
+
+    // Optimized show/hide button based on scroll position
     function toggleButtonVisibility() {
-      if (window.scrollY > 600) {
-        backToTopButton.classList.remove('opacity-0', 'translate-y-4', 'pointer-events-none');
-        backToTopButton.classList.add('opacity-100', 'translate-y-0');
-      } else {
-        backToTopButton.classList.add('opacity-0', 'translate-y-4', 'pointer-events-none');
-        backToTopButton.classList.remove('opacity-100', 'translate-y-0');
+      const shouldShow = window.scrollY > 600;
+      
+      if (shouldShow !== isVisible) {
+        isVisible = shouldShow;
+        
+        if (isVisible) {
+          backToTopButton.classList.remove('opacity-0', 'translate-y-4', 'pointer-events-none');
+          backToTopButton.classList.add('opacity-100', 'translate-y-0');
+        } else {
+          backToTopButton.classList.add('opacity-0', 'translate-y-4', 'pointer-events-none');
+          backToTopButton.classList.remove('opacity-100', 'translate-y-0');
+        }
+      }
+      
+      ticking = false;
+    }
+
+    // Throttled scroll handler for better performance
+    function handleScroll() {
+      if (!ticking) {
+        requestAnimationFrame(toggleButtonVisibility);
+        ticking = true;
       }
     }
 
@@ -40,7 +59,7 @@
     }
 
     // Event listeners
-    window.addEventListener('scroll', toggleButtonVisibility, { passive: true });
+    window.addEventListener('scroll', handleScroll, { passive: true });
     backToTopButton.addEventListener('click', scrollToTop);
 
     // Keyboard support

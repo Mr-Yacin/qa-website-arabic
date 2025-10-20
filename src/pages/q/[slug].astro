@@ -1,9 +1,10 @@
 ---
-import { getCollection, type CollectionEntry } from 'astro:content';
+import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Breadcrumbs from '../../components/Breadcrumbs.astro';
 import StarRating from '../../components/StarRating.jsx';
 import CardQuestion from '../../components/CardQuestion.astro';
+import ImageWithFallback from '../../components/ImageWithFallback.astro';
 import { formatDate, relatedByTags } from '../../lib/utils';
 
 // Get the slug from the URL params
@@ -148,20 +149,19 @@ const blogPostingStructuredData = {
       )}
     </header>
 
-    <!-- Hero Image -->
-    {heroImage && (
-      <div class="relative aspect-video rounded-lg overflow-hidden bg-zinc-100 dark:bg-zinc-800">
-        <img 
-          src={heroImage} 
-          alt={`صورة توضيحية للسؤال: ${question}`}
-          class="w-full h-full object-cover"
-          loading="lazy"
-          width="800"
-          height="450"
-          decoding="async"
-        />
-      </div>
-    )}
+    <!-- Hero Image with Fallback -->
+    <ImageWithFallback 
+      src={heroImage}
+      alt={`صورة توضيحية للسؤال: ${question}`}
+      questionText={question}
+      width={800}
+      height={450}
+      loading="lazy"
+      decoding="async"
+      showPlaceholder={true}
+      placeholderType="generated"
+      showQuestionText={true}
+    />
 
     <!-- Short Answer Highlight -->
     <div class="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg p-6">

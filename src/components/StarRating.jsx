@@ -61,7 +61,7 @@ export default function StarRating({ slug }) {
     }
   };
 
-  // Render individual star
+  // Render individual star with performance optimizations
   const renderStar = (starValue) => {
     const isFilled = starValue <= (hoveredRating || rating);
     const isDisabled = hasRated || isSubmitting;
@@ -71,9 +71,9 @@ export default function StarRating({ slug }) {
         key={starValue}
         type="button"
         className={`
-          text-2xl transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 rounded
-          ${isDisabled ? 'cursor-default' : 'cursor-pointer hover:scale-110 transform transition-transform'}
-          ${isFilled ? 'text-yellow-400' : 'text-zinc-300 dark:text-zinc-600'}
+          text-2xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-indigo-400 dark:focus:ring-offset-zinc-900 rounded will-change-transform
+          ${isDisabled ? 'cursor-default' : 'cursor-pointer hover:scale-110 transform'}
+          ${isFilled ? 'text-yellow-400 dark:text-yellow-300' : 'text-zinc-300 dark:text-zinc-600'}
         `}
         onClick={() => !isDisabled && handleRatingSubmit(starValue)}
         onMouseEnter={() => !isDisabled && setHoveredRating(starValue)}
@@ -89,8 +89,8 @@ export default function StarRating({ slug }) {
   };
 
   return (
-    <div className="flex flex-col items-center gap-3 p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-700">
-      <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+    <div className="flex flex-col items-center gap-3 p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-700 transition-colors duration-200">
+      <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100 transition-colors duration-200">
         قيم هذا السؤال
       </h3>
       
@@ -103,19 +103,19 @@ export default function StarRating({ slug }) {
       </div>
 
       {hasRated && (
-        <p className="text-sm text-zinc-600 dark:text-zinc-400 text-center">
+        <p className="text-sm text-zinc-600 dark:text-zinc-400 text-center transition-colors duration-200">
           شكراً لك! تم حفظ تقييمك ({rating} {rating === 1 ? 'نجمة' : 'نجوم'})
         </p>
       )}
 
       {isSubmitting && (
-        <p className="text-sm text-indigo-600 dark:text-indigo-400 text-center">
+        <p className="text-sm text-indigo-600 dark:text-indigo-400 text-center transition-colors duration-200">
           جاري الحفظ...
         </p>
       )}
 
       {!hasRated && !isSubmitting && (
-        <p className="text-sm text-zinc-500 dark:text-zinc-500 text-center">
+        <p className="text-sm text-zinc-500 dark:text-zinc-500 text-center transition-colors duration-200">
           اضغط على النجوم لإعطاء تقييم
         </p>
       )}

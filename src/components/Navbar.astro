@@ -23,13 +23,13 @@ const currentPath = Astro.url.pathname;
       </div>
 
       <!-- Navigation Links -->
-      <div class="flex items-center gap-6">
+      <div class="flex items-center gap-6 space-x-reverse">
         {navLinks.map(({ href, label }) => {
           const isActive = currentPath === href || (href === '/tags' && currentPath.startsWith('/tags'));
           return (
             <a
               href={href}
-              class={`font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-zinc-950 rounded-md px-3 py-2 hover:scale-105 relative ${
+              class={`font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-zinc-950 rounded-md px-3 py-2 hover:scale-105 relative will-change-transform ${
                 isActive 
                   ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20' 
                   : 'text-zinc-700 dark:text-zinc-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20'

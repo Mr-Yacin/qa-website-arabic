@@ -51,5 +51,36 @@ const {
     
     <!-- Back to Top Button -->
     <BackToTop />
+    
+    <!-- Image Loading Optimization Script -->
+    <script>
+      // Optimize image loading performance
+      function optimizeImageLoading() {
+        // Add loaded class to images when they finish loading
+        const images = document.querySelectorAll('img[loading="lazy"]');
+        images.forEach(img => {
+          if (img.complete) {
+            img.style.opacity = '1';
+            img.classList.add('loaded');
+          } else {
+            img.addEventListener('load', function() {
+              this.style.opacity = '1';
+              this.classList.add('loaded');
+            });
+            img.addEventListener('error', function() {
+              this.style.opacity = '1';
+              this.classList.add('error');
+            });
+          }
+        });
+      }
+
+      // Initialize on DOM content loaded
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', optimizeImageLoading);
+      } else {
+        optimizeImageLoading();
+      }
+    </script>
   </body>
 </html>

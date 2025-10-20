@@ -2,8 +2,8 @@
 import { c as createComponent, a as createAstro, r as renderComponent, b as renderTemplate, m as maybeRenderHead, d as addAttribute, F as Fragment } from '../../chunks/astro/server_B_luCV0f.mjs';
 import 'kleur/colors';
 import { g as getCollection } from '../../chunks/_astro_content_CAazhIw8.mjs';
-import { $ as $$BaseLayout } from '../../chunks/BaseLayout_CuslUIHG.mjs';
-import { $ as $$CardQuestion } from '../../chunks/CardQuestion_CD2MAFBX.mjs';
+import { $ as $$BaseLayout } from '../../chunks/BaseLayout_CSI2mDnn.mjs';
+import { $ as $$CardQuestion } from '../../chunks/CardQuestion_BqkHmwZX.mjs';
 import { p as paginate } from '../../chunks/paginate__--Aod_g.mjs';
 export { renderers } from '../../renderers.mjs';
 

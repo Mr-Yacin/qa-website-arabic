@@ -1,0 +1,176 @@
+---
+import { getFirstChar, getPlaceholderColors, generatePlaceholderUrl, formatTextForPlaceholder, getResponsiveFontSize } from '../lib/imageUtils';
+
+export interface Props {
+  src?: string;
+  alt: string;
+  class?: string;
+  width?: number;
+  height?: number;
+  loading?: 'lazy' | 'eager';
+  decoding?: 'async' | 'sync' | 'auto';
+  showPlaceholder?: boolean;
+  placeholderType?: 'generated' | 'default' | 'none';
+  questionText?: string;
+  showQuestionText?: boolean;
+}
+
+const { 
+  src, 
+  alt, 
+  class: className = '', 
+  width = 800, 
+  height = 450,
+  loading = 'lazy',
+  decoding = 'async',
+  showPlaceholder = true,
+  placeholderType = 'generated',
+  questionText,
+  showQuestionText = true
+} = Astro.props;
+
+// Generate placeholder data using utilities
+const firstChar = getFirstChar(alt);
+const colors = getPlaceholderColors(alt);
+const defaultPlaceholder = generatePlaceholderUrl({ width, height, text: alt, type: 'question' });
+
+// Format question text for display
+const displayText = questionText ? formatTextForPlaceholder(questionText, 100) : formatTextForPlaceholder(alt, 100);
+const shouldShowText = showQuestionText && (questionText || alt);
+const textFontSize = getResponsiveFontSize(displayText.length);
+---
+
+<div class={`relative aspect-video rounded-lg overflow-hidden bg-zinc-100 dark:bg-zinc-800 ${className}`}>
+  {src ? (
+    <>
+      <!-- Actual Image -->
+      <img 
+        src={src}
+        alt={alt}
+        class="w-full h-full object-cover transition-opacity duration-300 image-main"
+        width={width}
+        height={height}
+        loading={loading}
+        decoding={decoding}
+        style="opacity: 0;"
+        onload="this.style.opacity='1'; this.nextElementSibling?.style && (this.nextElementSibling.style.display='none');"
+        onerror="this.style.display='none'; this.nextElementSibling?.style && (this.nextElementSibling.style.display='flex');"
+      />
+      
+      <!-- Fallback Placeholder -->
+      {showPlaceholder && (
+        <>
+          {placeholderType === 'default' ? (
+            <div class="absolute inset-0 image-fallback">
+              <img 
+                src={defaultPlaceholder}
+                alt="صورة افتراضية"
+                class="w-full h-full object-cover"
+                width={width}
+                height={height}
+              />
+            </div>
+          ) : placeholderType === 'generated' ? (
+            <div class={`absolute inset-0 flex items-center justify-center bg-gradient-to-br ${colors.gradient} image-fallback p-8`}>
+              <div class="text-center text-white max-w-full">
+                {shouldShowText ? (
+                  <>
+                    <!-- Question Icon with Background -->
+                    <div class="mb-6">
+                      <div class="w-20 h-20 mx-auto bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
+                        <svg class="w-10 h-10" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/>
+                        </svg>
+                      </div>
+                    </div>
+                    <!-- Question Text with Background -->
+                    <div class="bg-black/20 backdrop-blur-sm rounded-lg p-4 mb-4 mx-4">
+                      <div class={`${textFontSize} font-semibold leading-relaxed text-center`}>
+                        {displayText}
+                      </div>
+                    </div>
+                    <!-- Subtitle -->
+                    <div class="text-sm opacity-75 px-4">
+                      صورة توضيحية للسؤال
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <!-- Fallback to character display -->
+                    <div class="text-6xl font-bold mb-2 opacity-90">
+                      {firstChar}
+                    </div>
+                    <div class="text-sm opacity-75 px-4">
+                      صورة توضيحية
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          ) : null}
+        </>
+      )}
+    </>
+  ) : showPlaceholder ? (
+    <!-- Only Placeholder (no src provided) -->
+    <>
+      {placeholderType === 'default' ? (
+        <img 
+          src={defaultPlaceholder}
+          alt="صورة افتراضية"
+          class="w-full h-full object-cover"
+          width={width}
+          height={height}
+          loading={loading}
+        />
+      ) : placeholderType === 'generated' ? (
+        <div class={`flex items-center justify-center bg-gradient-to-br ${colors.gradient} h-full p-8`}>
+          <div class="text-center text-white max-w-full">
+            {shouldShowText ? (
+              <>
+                <!-- Question Icon with Background -->
+                <div class="mb-6">
+                  <div class="w-20 h-20 mx-auto bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
+                    <svg class="w-10 h-10" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/>
+                    </svg>
+                  </div>
+                </div>
+                <!-- Question Text with Background -->
+                <div class="bg-black/20 backdrop-blur-sm rounded-lg p-4 mb-4 mx-4">
+                  <div class={`${textFontSize} font-semibold leading-relaxed text-center`}>
+                    {displayText}
+                  </div>
+                </div>
+                <!-- Subtitle -->
+                <div class="text-sm opacity-75 px-4">
+                  صورة توضيحية للسؤال
+                </div>
+              </>
+            ) : (
+              <>
+                <!-- Fallback to character display -->
+                <div class="text-6xl font-bold mb-2 opacity-90">
+                  {firstChar}
+                </div>
+                <div class="text-sm opacity-75 px-4">
+                  صورة توضيحية
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      ) : null}
+    </>
+  ) : null}
+</div>
+
+<style>
+  .image-fallback {
+    display: none;
+  }
+  
+  .image-main[style*="opacity: 0"] + .image-fallback {
+    display: flex;
+  }
+</style>

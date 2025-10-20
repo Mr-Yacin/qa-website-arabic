@@ -2,8 +2,8 @@
 import { c as createComponent, r as renderComponent, b as renderTemplate, m as maybeRenderHead } from '../chunks/astro/server_B_luCV0f.mjs';
 import 'kleur/colors';
 import { g as getCollection } from '../chunks/_astro_content_CAazhIw8.mjs';
-import { $ as $$BaseLayout } from '../chunks/BaseLayout_CuslUIHG.mjs';
-import { $ as $$CardQuestion } from '../chunks/CardQuestion_CD2MAFBX.mjs';
+import { $ as $$BaseLayout } from '../chunks/BaseLayout_CSI2mDnn.mjs';
+import { $ as $$CardQuestion } from '../chunks/CardQuestion_BqkHmwZX.mjs';
 import { p as paginate } from '../chunks/paginate__--Aod_g.mjs';
 export { renderers } from '../renderers.mjs';
 
@@ -26,11 +26,11 @@ const $$Questions = createComponent(async ($$result, $$props, $$slots) => {
 المزيد من الأسئلة
 </h3> <p class="text-zinc-600 dark:text-zinc-300 mb-4">
 يوجد ${paginationResult.total - 10} سؤال إضافي متاح للتصفح
-</p> <a href="/page/2" class="inline-flex items-center justify-center px-6 py-3 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white font-medium rounded-lg transition-colors duration-200 shadow-lg hover:shadow-xl">
+</p> <a href="/page/2" class="inline-flex items-center justify-center px-6 py-3 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white font-medium rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-zinc-950 hover:scale-105 will-change-transform">
 عرض المزيد من الأسئلة
-</a> </div> </div>`} <div class="text-center"> <div class="flex flex-col sm:flex-row gap-4 justify-center"> <a href="/tags" class="inline-flex items-center justify-center px-6 py-3 border border-zinc-300 dark:border-zinc-600 text-base font-medium rounded-lg text-zinc-700 dark:text-zinc-300 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors duration-200">
+</a> </div> </div>`} <div class="text-center"> <div class="flex flex-col sm:flex-row gap-4 justify-center"> <a href="/tags" class="inline-flex items-center justify-center px-6 py-3 border border-zinc-300 dark:border-zinc-600 text-base font-medium rounded-lg text-zinc-700 dark:text-zinc-300 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-zinc-950 hover:scale-105 will-change-transform">
 تصفح حسب الموضوع
-</a> <a href="/" class="inline-flex items-center justify-center px-6 py-3 border border-zinc-300 dark:border-zinc-600 text-base font-medium rounded-lg text-zinc-700 dark:text-zinc-300 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors duration-200">
+</a> <a href="/" class="inline-flex items-center justify-center px-6 py-3 border border-zinc-300 dark:border-zinc-600 text-base font-medium rounded-lg text-zinc-700 dark:text-zinc-300 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-zinc-950 hover:scale-105 will-change-transform">
 العودة للرئيسية
 </a> </div> </div> ` })}`;
 }, "C:/Users/yacin/Documents/qa-mva/src/pages/questions.astro", void 0);

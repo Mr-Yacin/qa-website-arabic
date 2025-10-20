@@ -32,6 +32,19 @@
     @apply ring-2 ring-indigo-500 ring-offset-2 dark:ring-indigo-400 dark:ring-offset-zinc-950 outline-none;
   }
   
+  /* Improved image loading states */
+  img {
+    @apply transition-opacity duration-300;
+  }
+  
+  img[loading="lazy"] {
+    opacity: 0;
+  }
+  
+  img[loading="lazy"].loaded {
+    opacity: 1;
+  }
+  
   /* Skip to main content link for screen readers */
   .skip-to-main {
     @apply absolute -top-40 left-6 bg-indigo-600 text-white px-4 py-2 rounded-md z-50 transition-all duration-200;
@@ -94,6 +107,26 @@
     transform: scaleX(-1);
   }
   
+  /* Enhanced RTL spacing utilities */
+  .space-x-reverse > :not([hidden]) ~ :not([hidden]) {
+    --tw-space-x-reverse: 1;
+  }
+  
+  .divide-x-reverse > :not([hidden]) ~ :not([hidden]) {
+    --tw-divide-x-reverse: 1;
+  }
+  
+  /* RTL-friendly margin utilities */
+  .mr-auto-rtl {
+    margin-left: auto;
+    margin-right: 0;
+  }
+  
+  .ml-auto-rtl {
+    margin-right: auto;
+    margin-left: 0;
+  }
+  
   /* Prose styles for Arabic content */
   .prose-rtl {
     @apply prose prose-zinc dark:prose-invert max-w-none;
@@ -116,14 +149,42 @@
     padding-left: 0;
   }
   
+  .prose-rtl li {
+    text-align: right;
+  }
+  
   .prose-rtl blockquote {
     border-right: 0.25rem solid #e4e4e7;
     border-left: none;
     padding-right: 1em;
     padding-left: 0;
+    text-align: right;
   }
   
   .dark .prose-rtl blockquote {
     border-right-color: #3f3f46;
+  }
+  
+  /* Enhanced dark mode consistency */
+  .dark-mode-transition {
+    @apply transition-colors duration-200;
+  }
+  
+  /* Performance optimization utilities */
+  .will-change-transform {
+    will-change: transform;
+  }
+  
+  .will-change-opacity {
+    will-change: opacity;
+  }
+  
+  /* Lazy loading utilities */
+  .lazy-load {
+    @apply opacity-0 transition-opacity duration-300;
+  }
+  
+  .lazy-load.loaded {
+    @apply opacity-100;
   }
 }

@@ -1,0 +1,50 @@
+---
+import ImageWithFallback from './ImageWithFallback.astro';
+
+// Demo questions in Arabic
+const demoQuestions = [
+  "ما هو إطار العمل Astro وكيف يختلف عن React؟",
+  "كيف يمكنني تحسين أداء موقعي الإلكتروني؟",
+  "What are the best practices for SEO optimization?",
+  "ما هي أفضل الطرق لتطوير مواقع الويب الحديثة؟"
+];
+---
+
+<div class="space-y-8">
+  <h2 class="text-2xl font-bold text-zinc-900 dark:text-zinc-100 mb-6">
+    معاينة نظام الصور الاحتياطية
+  </h2>
+  
+  <div class="grid gap-6 md:grid-cols-2">
+    {demoQuestions.map((question, index) => (
+      <div class="space-y-3">
+        <h3 class="text-lg font-semibold text-zinc-800 dark:text-zinc-200">
+          مثال {index + 1}
+        </h3>
+        <ImageWithFallback 
+          src={`/images/nonexistent-image-${index}.jpg`}
+          alt={`صورة توضيحية للسؤال: ${question}`}
+          questionText={question}
+          width={400}
+          height={225}
+          placeholderType="generated"
+          showQuestionText={true}
+        />
+        <p class="text-sm text-zinc-600 dark:text-zinc-400">
+          {question}
+        </p>
+      </div>
+    ))}
+  </div>
+  
+  <div class="mt-8 p-4 bg-zinc-100 dark:bg-zinc-800 rounded-lg">
+    <h3 class="text-lg font-semibold mb-2">الميزات:</h3>
+    <ul class="text-sm text-zinc-600 dark:text-zinc-300 space-y-1">
+      <li>• عرض نص السؤال داخل الصورة الاحتياطية</li>
+      <li>• ألوان متسقة بناءً على محتوى النص</li>
+      <li>• تصميم متجاوب مع أحجام النصوص المختلفة</li>
+      <li>• دعم النصوص العربية والإنجليزية</li>
+      <li>• تأثيرات بصرية جميلة مع الشفافية</li>
+    </ul>
+  </div>
+</div>
