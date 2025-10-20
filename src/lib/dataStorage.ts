@@ -1,6 +1,3 @@
-import { promises as fs } from 'fs';
-import path from 'path';
-
 // Type definitions for data structures
 export interface RatingData {
   [questionSlug: string]: {
@@ -39,71 +36,158 @@ export interface SearchIndex {
   lastUpdated: Date | null;
 }
 
-// File paths
-const DATA_DIR = 'data';
-const RATINGS_FILE = path.join(DATA_DIR, 'ratings.json');
-const CONTACTS_FILE = path.join(DATA_DIR, 'contacts.json');
-const SEARCH_INDEX_FILE = path.join(DATA_DIR, 'search-index.json');
+// Check if we're in a Vercel environment with KV available
+const isVercel: boolean = typeof process !== 'undefined' && Boolean(process.env.VERCEL);
+const hasKvCredentials: boolean = Boolean(process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN);
+
+// Check if we're in any serverless environment
+const isServerless: boolean = typeof process !== 'undefined' && Boolean(
+  process.env.VERCEL || 
+  process.env.NETLIFY || 
+  process.env.AWS_LAMBDA_FUNCTION_NAME ||
+  process.env.NODE_ENV === 'production'
+);
+
+// In-memory fallback storage for environments without KV
+let ratingsCache: RatingData = {};
+let contactsCache: ContactStorage = { messages: [], lastId: 0 };
+let searchIndexCache: SearchIndex = { questions: [], lastUpdated: null };
 
 /**
- * Ensures the data directory exists
+ * Load data from Vercel KV, file system (development), or in-memory cache (fallback)
  */
-async function ensureDataDirectory(): Promise<void> {
-  try {
-    await fs.access(DATA_DIR);
-  } catch {
-    await fs.mkdir(DATA_DIR, { recursive: true });
+async function loadFromStorage<T>(cacheKey: 'ratings' | 'contacts' | 'searchIndex', defaultValue: T): Promise<T> {
+  // Try Vercel KV first if available
+  if (isVercel && hasKvCredentials) {
+    try {
+      const { kv } = await import('@vercel/kv');
+      const data = await kv.get<T>(cacheKey);
+      if (data !== null) {
+        return data;
+      }
+    } catch (error) {
+      console.warn(`Failed to load from Vercel KV for ${cacheKey}:`, error);
+      // Fall through to other storage methods
+    }
   }
-}
 
-/**
- * Generic function to read JSON data from file
- */
-async function readJsonFile<T>(filePath: string, defaultValue: T): Promise<T> {
+  // In serverless environment without KV, use in-memory cache
+  if (isServerless) {
+    switch (cacheKey) {
+      case 'ratings':
+        return ratingsCache as T;
+      case 'contacts':
+        return contactsCache as T;
+      case 'searchIndex':
+        return searchIndexCache as T;
+      default:
+        return defaultValue;
+    }
+  }
+
+  // In development, try to load from file system
   try {
-    await ensureDataDirectory();
+    const { promises: fs } = await import('fs');
+    const path = await import('path');
+    
+    const DATA_DIR = 'data';
+    const fileName = `${cacheKey}.json`;
+    const filePath = path.join(DATA_DIR, fileName);
+    
     const data = await fs.readFile(filePath, 'utf-8');
     return JSON.parse(data);
   } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-      // File doesn't exist, return default value
-      return defaultValue;
-    }
-    console.error(`Error reading file ${filePath}:`, error);
-    throw new Error(`Failed to read data from ${filePath}`);
+    // File doesn't exist or can't be read, return default
+    return defaultValue;
   }
 }
 
 /**
- * Generic function to write JSON data to file
+ * Save data to Vercel KV, file system (development), or in-memory cache (fallback)
  */
-async function writeJsonFile<T>(filePath: string, data: T): Promise<void> {
+async function saveToStorage<T>(cacheKey: 'ratings' | 'contacts' | 'searchIndex', data: T): Promise<void> {
+  // Try Vercel KV first if available
+  if (isVercel && hasKvCredentials) {
+    try {
+      const { kv } = await import('@vercel/kv');
+      await kv.set(cacheKey, data);
+      console.log(`Successfully saved ${cacheKey} to Vercel KV`);
+      return;
+    } catch (error) {
+      console.warn(`Failed to save to Vercel KV for ${cacheKey}:`, error);
+      // Fall through to other storage methods
+    }
+  }
+
+  // In serverless environment without KV, update in-memory cache
+  if (isServerless) {
+    switch (cacheKey) {
+      case 'ratings':
+        ratingsCache = data as RatingData;
+        break;
+      case 'contacts':
+        contactsCache = data as ContactStorage;
+        break;
+      case 'searchIndex':
+        searchIndexCache = data as SearchIndex;
+        break;
+    }
+    console.log(`Saved ${cacheKey} to in-memory cache (serverless fallback)`);
+    return;
+  }
+
+  // In development, save to file system
   try {
-    await ensureDataDirectory();
+    const { promises: fs } = await import('fs');
+    const path = await import('path');
+    
+    const DATA_DIR = 'data';
+    const fileName = `${cacheKey}.json`;
+    const filePath = path.join(DATA_DIR, fileName);
+    
+    // Ensure directory exists
+    try {
+      await fs.access(DATA_DIR);
+    } catch {
+      await fs.mkdir(DATA_DIR, { recursive: true });
+    }
+    
     const jsonData = JSON.stringify(data, null, 2);
     await fs.writeFile(filePath, jsonData, 'utf-8');
+    console.log(`Saved ${cacheKey} to file system`);
   } catch (error) {
-    console.error(`Error writing file ${filePath}:`, error);
-    throw new Error(`Failed to write data to ${filePath}`);
+    console.error(`Error saving data for ${cacheKey}:`, error);
+    // In case of file system error, still update cache
+    switch (cacheKey) {
+      case 'ratings':
+        ratingsCache = data as RatingData;
+        break;
+      case 'contacts':
+        contactsCache = data as ContactStorage;
+        break;
+      case 'searchIndex':
+        searchIndexCache = data as SearchIndex;
+        break;
+    }
   }
 }
 
 // Rating data functions
 export async function loadRatings(): Promise<RatingData> {
-  return readJsonFile<RatingData>(RATINGS_FILE, {});
+  return loadFromStorage('ratings', {});
 }
 
 export async function saveRatings(ratings: RatingData): Promise<void> {
-  return writeJsonFile(RATINGS_FILE, ratings);
+  return saveToStorage('ratings', ratings);
 }
 
 // Contact data functions
 export async function loadContacts(): Promise<ContactStorage> {
-  return readJsonFile<ContactStorage>(CONTACTS_FILE, { messages: [], lastId: 0 });
+  return loadFromStorage('contacts', { messages: [], lastId: 0 });
 }
 
 export async function saveContacts(contacts: ContactStorage): Promise<void> {
-  return writeJsonFile(CONTACTS_FILE, contacts);
+  return saveToStorage('contacts', contacts);
 }
 
 export async function saveContactMessage(message: ContactFormData): Promise<void> {
@@ -115,11 +199,11 @@ export async function saveContactMessage(message: ContactFormData): Promise<void
 
 // Search index functions
 export async function loadSearchIndex(): Promise<SearchIndex> {
-  return readJsonFile<SearchIndex>(SEARCH_INDEX_FILE, { questions: [], lastUpdated: null });
+  return loadFromStorage('searchIndex', { questions: [], lastUpdated: null });
 }
 
 export async function saveSearchIndex(index: SearchIndex): Promise<void> {
-  return writeJsonFile(SEARCH_INDEX_FILE, index);
+  return saveToStorage('searchIndex', index);
 }
 
 // Utility functions
@@ -140,11 +224,43 @@ export function generateUserId(ip: string, userAgent: string): string {
 }
 
 /**
- * Validates that a file exists and is readable
+ * Validates that data storage is available
  */
-export async function validateDataFile(filePath: string): Promise<boolean> {
+export async function validateDataStorage(): Promise<boolean> {
+  // Test Vercel KV if available
+  if (isVercel && hasKvCredentials) {
+    try {
+      const { kv } = await import('@vercel/kv');
+      await kv.set('_test', 'test');
+      await kv.del('_test');
+      return true;
+    } catch (error) {
+      console.warn('Vercel KV validation failed:', error);
+      // Fall through to other validation methods
+    }
+  }
+
+  // In serverless, we always have in-memory storage available
+  if (isServerless) {
+    return true;
+  }
+
+  // In development, check if we can write to the data directory
   try {
-    await fs.access(filePath, fs.constants.R_OK | fs.constants.W_OK);
+    const { promises: fs } = await import('fs');
+    const DATA_DIR = 'data';
+    
+    // Try to create the directory if it doesn't exist
+    try {
+      await fs.access(DATA_DIR);
+    } catch {
+      await fs.mkdir(DATA_DIR, { recursive: true });
+    }
+    
+    // Test write access
+    const testFile = `${DATA_DIR}/.test`;
+    await fs.writeFile(testFile, 'test');
+    await fs.unlink(testFile);
     return true;
   } catch {
     return false;
@@ -152,13 +268,26 @@ export async function validateDataFile(filePath: string): Promise<boolean> {
 }
 
 /**
- * Gets the size of a data file in bytes
+ * Gets information about the current storage method
  */
-export async function getDataFileSize(filePath: string): Promise<number> {
-  try {
-    const stats = await fs.stat(filePath);
-    return stats.size;
-  } catch {
-    return 0;
+export function getStorageInfo(): { 
+  type: 'vercel-kv' | 'memory' | 'filesystem'; 
+  isServerless: boolean; 
+  hasKv: boolean;
+} {
+  let type: 'vercel-kv' | 'memory' | 'filesystem';
+  
+  if (isVercel && hasKvCredentials) {
+    type = 'vercel-kv';
+  } else if (isServerless) {
+    type = 'memory';
+  } else {
+    type = 'filesystem';
   }
+
+  return {
+    type,
+    isServerless,
+    hasKv: hasKvCredentials
+  };
 }
