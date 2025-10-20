@@ -35,6 +35,9 @@
   /* Improved image loading states */
   img {
     @apply transition-opacity duration-300;
+    /* Ensure images don't exceed container width on mobile */
+    max-width: 100%;
+    height: auto;
   }
   
   img[loading="lazy"] {
@@ -43,6 +46,14 @@
   
   img[loading="lazy"].loaded {
     opacity: 1;
+  }
+  
+  /* Mobile-specific image optimizations */
+  @media (max-width: 640px) {
+    .aspect-video {
+      /* Slightly taller aspect ratio on mobile for better text readability */
+      aspect-ratio: 16 / 10;
+    }
   }
   
   /* Skip to main content link for screen readers */

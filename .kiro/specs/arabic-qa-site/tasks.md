@@ -135,3 +135,12 @@
   - Ensure theme consistency across all components and pages
   - Keep original design as default with simple dark mode support
   - _Requirements: 16.1, 16.2, 16.6, 16.7_
+
+- [x] 20. Optimize placeholder images for mobile devices
+  - Implement responsive sizing for icons, padding, and text containers
+  - Add adaptive text truncation for different screen sizes (mobile: 40 chars, tablet: 70 chars, desktop: 100 chars)
+  - Create responsive typography system with mobile-first font sizing
+  - Add minimum height constraints to prevent overly small placeholders
+  - Implement responsive text display using CSS breakpoints
+  - Optimize aspect ratios for mobile readability (16:10 on mobile vs 16:9 on desktop)
+  - Add mobile-specific CSS optimizations for image loading and layout

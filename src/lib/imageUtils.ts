@@ -104,16 +104,21 @@ export function getFirstChar(text: string): string {
 /**
  * Format text for display in placeholders
  */
-export function formatTextForPlaceholder(text: string, maxLength: number = 120): string {
+export function formatTextForPlaceholder(text: string, maxLength: number = 100): string {
   if (!text) return '';
-  if (text.length <= maxLength) return text;
+  
+  // Adjust max length based on screen size (this is a rough estimate)
+  // In a real app, you might want to pass screen size as a parameter
+  const adjustedMaxLength = Math.min(maxLength, 80); // More conservative for mobile
+  
+  if (text.length <= adjustedMaxLength) return text;
   
   // Find the last space before maxLength to avoid cutting words
-  const truncated = text.substring(0, maxLength);
+  const truncated = text.substring(0, adjustedMaxLength);
   const lastSpace = truncated.lastIndexOf(' ');
   
   // If we found a space and it's not too far back, use it
-  if (lastSpace > maxLength * 0.8) {
+  if (lastSpace > adjustedMaxLength * 0.7) {
     return truncated.substring(0, lastSpace) + '...';
   }
   
@@ -131,8 +136,28 @@ export function hasArabicText(text: string): boolean {
  * Get appropriate font size based on text length
  */
 export function getResponsiveFontSize(textLength: number): string {
-  if (textLength <= 30) return 'text-xl md:text-2xl';
-  if (textLength <= 60) return 'text-lg md:text-xl';
-  if (textLength <= 90) return 'text-base md:text-lg';
-  return 'text-sm md:text-base';
+  if (textLength <= 20) return 'text-base sm:text-lg md:text-xl lg:text-2xl';
+  if (textLength <= 40) return 'text-sm sm:text-base md:text-lg lg:text-xl';
+  if (textLength <= 70) return 'text-xs sm:text-sm md:text-base lg:text-lg';
+  if (textLength <= 100) return 'text-xs sm:text-sm md:text-base';
+  return 'text-xs sm:text-xs md:text-sm';
+}
+
+/**
+ * Get mobile-optimized text for placeholders
+ */
+export function getMobileOptimizedText(text: string): {
+  mobile: string;
+  tablet: string;
+  desktop: string;
+} {
+  const mobileMax = 40;
+  const tabletMax = 70;
+  const desktopMax = 100;
+  
+  return {
+    mobile: formatTextForPlaceholder(text, mobileMax),
+    tablet: formatTextForPlaceholder(text, tabletMax),
+    desktop: formatTextForPlaceholder(text, desktopMax)
+  };
 }

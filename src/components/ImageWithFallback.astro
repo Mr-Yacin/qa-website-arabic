@@ -1,5 +1,5 @@
 ---
-import { getFirstChar, getPlaceholderColors, generatePlaceholderUrl, formatTextForPlaceholder, getResponsiveFontSize } from '../lib/imageUtils';
+import { getFirstChar, getPlaceholderColors, generatePlaceholderUrl, formatTextForPlaceholder, getResponsiveFontSize, getMobileOptimizedText } from '../lib/imageUtils';
 
 export interface Props {
   src?: string;
@@ -34,13 +34,15 @@ const firstChar = getFirstChar(alt);
 const colors = getPlaceholderColors(alt);
 const defaultPlaceholder = generatePlaceholderUrl({ width, height, text: alt, type: 'question' });
 
-// Format question text for display
-const displayText = questionText ? formatTextForPlaceholder(questionText, 100) : formatTextForPlaceholder(alt, 100);
-const shouldShowText = showQuestionText && (questionText || alt);
+// Format question text for display with mobile optimization
+const baseText = questionText || alt;
+const optimizedText = getMobileOptimizedText(baseText);
+const displayText = optimizedText.mobile; // Use mobile-optimized text as default
+const shouldShowText = showQuestionText && baseText;
 const textFontSize = getResponsiveFontSize(displayText.length);
 ---
 
-<div class={`relative aspect-video rounded-lg overflow-hidden bg-zinc-100 dark:bg-zinc-800 ${className}`}>
+<div class={`relative aspect-video rounded-lg overflow-hidden bg-zinc-100 dark:bg-zinc-800 min-h-[200px] sm:min-h-[250px] md:min-h-[300px] ${className}`}>
   {src ? (
     <>
       <!-- Actual Image -->
@@ -71,36 +73,41 @@ const textFontSize = getResponsiveFontSize(displayText.length);
               />
             </div>
           ) : placeholderType === 'generated' ? (
-            <div class={`absolute inset-0 flex items-center justify-center bg-gradient-to-br ${colors.gradient} image-fallback p-8`}>
-              <div class="text-center text-white max-w-full">
+            <div class={`absolute inset-0 flex items-center justify-center bg-gradient-to-br ${colors.gradient} image-fallback p-3 sm:p-6 md:p-8`}>
+              <div class="text-center text-white max-w-full w-full">
                 {shouldShowText ? (
                   <>
                     <!-- Question Icon with Background -->
-                    <div class="mb-6">
-                      <div class="w-20 h-20 mx-auto bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
-                        <svg class="w-10 h-10" fill="currentColor" viewBox="0 0 24 24">
+                    <div class="mb-3 sm:mb-4 md:mb-6">
+                      <div class="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 mx-auto bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
+                        <svg class="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10" fill="currentColor" viewBox="0 0 24 24">
                           <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/>
                         </svg>
                       </div>
                     </div>
                     <!-- Question Text with Background -->
-                    <div class="bg-black/20 backdrop-blur-sm rounded-lg p-4 mb-4 mx-4">
-                      <div class={`${textFontSize} font-semibold leading-relaxed text-center`}>
-                        {displayText}
+                    <div class="bg-black/20 backdrop-blur-sm rounded-lg p-2 sm:p-3 md:p-4 mb-2 sm:mb-3 md:mb-4 mx-2 sm:mx-3 md:mx-4">
+                      <div class={`${textFontSize} font-semibold leading-relaxed text-center break-words`}>
+                        <!-- Mobile text (shortest) -->
+                        <span class="block sm:hidden">{optimizedText.mobile}</span>
+                        <!-- Tablet text (medium) -->
+                        <span class="hidden sm:block md:hidden">{optimizedText.tablet}</span>
+                        <!-- Desktop text (longest) -->
+                        <span class="hidden md:block">{optimizedText.desktop}</span>
                       </div>
                     </div>
                     <!-- Subtitle -->
-                    <div class="text-sm opacity-75 px-4">
+                    <div class="text-xs sm:text-sm opacity-75 px-2 sm:px-3 md:px-4">
                       صورة توضيحية للسؤال
                     </div>
                   </>
                 ) : (
                   <>
                     <!-- Fallback to character display -->
-                    <div class="text-6xl font-bold mb-2 opacity-90">
+                    <div class="text-4xl sm:text-5xl md:text-6xl font-bold mb-1 sm:mb-2 opacity-90">
                       {firstChar}
                     </div>
-                    <div class="text-sm opacity-75 px-4">
+                    <div class="text-xs sm:text-sm opacity-75 px-2 sm:px-3 md:px-4">
                       صورة توضيحية
                     </div>
                   </>
@@ -124,36 +131,41 @@ const textFontSize = getResponsiveFontSize(displayText.length);
           loading={loading}
         />
       ) : placeholderType === 'generated' ? (
-        <div class={`flex items-center justify-center bg-gradient-to-br ${colors.gradient} h-full p-8`}>
-          <div class="text-center text-white max-w-full">
+        <div class={`flex items-center justify-center bg-gradient-to-br ${colors.gradient} h-full p-3 sm:p-6 md:p-8`}>
+          <div class="text-center text-white max-w-full w-full">
             {shouldShowText ? (
               <>
                 <!-- Question Icon with Background -->
-                <div class="mb-6">
-                  <div class="w-20 h-20 mx-auto bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
-                    <svg class="w-10 h-10" fill="currentColor" viewBox="0 0 24 24">
+                <div class="mb-3 sm:mb-4 md:mb-6">
+                  <div class="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 mx-auto bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
+                    <svg class="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/>
                     </svg>
                   </div>
                 </div>
                 <!-- Question Text with Background -->
-                <div class="bg-black/20 backdrop-blur-sm rounded-lg p-4 mb-4 mx-4">
-                  <div class={`${textFontSize} font-semibold leading-relaxed text-center`}>
-                    {displayText}
+                <div class="bg-black/20 backdrop-blur-sm rounded-lg p-2 sm:p-3 md:p-4 mb-2 sm:mb-3 md:mb-4 mx-2 sm:mx-3 md:mx-4">
+                  <div class={`${textFontSize} font-semibold leading-relaxed text-center break-words`}>
+                    <!-- Mobile text (shortest) -->
+                    <span class="block sm:hidden">{optimizedText.mobile}</span>
+                    <!-- Tablet text (medium) -->
+                    <span class="hidden sm:block md:hidden">{optimizedText.tablet}</span>
+                    <!-- Desktop text (longest) -->
+                    <span class="hidden md:block">{optimizedText.desktop}</span>
                   </div>
                 </div>
                 <!-- Subtitle -->
-                <div class="text-sm opacity-75 px-4">
+                <div class="text-xs sm:text-sm opacity-75 px-2 sm:px-3 md:px-4">
                   صورة توضيحية للسؤال
                 </div>
               </>
             ) : (
               <>
                 <!-- Fallback to character display -->
-                <div class="text-6xl font-bold mb-2 opacity-90">
+                <div class="text-4xl sm:text-5xl md:text-6xl font-bold mb-1 sm:mb-2 opacity-90">
                   {firstChar}
                 </div>
-                <div class="text-sm opacity-75 px-4">
+                <div class="text-xs sm:text-sm opacity-75 px-2 sm:px-3 md:px-4">
                   صورة توضيحية
                 </div>
               </>
