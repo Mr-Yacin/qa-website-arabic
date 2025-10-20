@@ -60,7 +60,7 @@
   - Add proper SEO meta tags for homepage
   - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5_
 
-- [ ] 10. Implement question detail pages
+- [x] 10. Implement question detail pages
   - Create src/pages/q/[slug].astro for individual question pages
   - Insert the <Breadcrumbs /> component at the top of the question detail page (/q/[slug]) before the title
   - Display question title, metadata, short answer in highlighted card

@@ -1,0 +1,211 @@
+---
+import { getCollection, type CollectionEntry } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import StarRating from '../../components/StarRating.jsx';
+import CardQuestion from '../../components/CardQuestion.astro';
+import { formatDate, relatedByTags } from '../../lib/utils';
+
+// Get the slug from the URL params
+const { slug } = Astro.params;
+
+// Get the entry dynamically (for server mode)
+const qaEntries = await getCollection('qa');
+const entry = qaEntries.find(entry => entry.slug === slug);
+
+// Handle 404 cases - return 404 response if entry doesn't exist
+if (!entry) {
+  return new Response(null, {
+    status: 404,
+    statusText: 'Not found'
+  });
+}
+
+const { Content } = await entry.render();
+const { question, shortAnswer, pubDate, updatedDate, tags, difficulty, heroImage } = entry.data;
+
+// Get all questions for related content
+const allQuestions = await getCollection('qa');
+const relatedQuestions = relatedByTags(entry, allQuestions, 3);
+
+// Breadcrumb items
+const breadcrumbItems = [
+  { label: 'الرئيسية', href: '/' },
+  { label: question }
+];
+
+// Difficulty labels in Arabic
+const difficultyLabels = {
+  easy: 'سهل',
+  medium: 'متوسط', 
+  hard: 'صعب'
+};
+
+// Difficulty colors
+const difficultyColors = {
+  easy: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300',
+  medium: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300',
+  hard: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
+};
+
+// SEO title and description
+const pageTitle = `${question} - موقع الأسئلة والأجوبة`;
+const pageDescription = shortAnswer;
+
+// Structured data for FAQPage and BlogPosting
+const faqStructuredData = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": {
+    "@type": "Question",
+    "name": question,
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": shortAnswer
+    }
+  }
+};
+
+const blogPostingStructuredData = {
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": question,
+  "description": shortAnswer,
+  "datePublished": pubDate.toISOString(),
+  "dateModified": updatedDate ? updatedDate.toISOString() : pubDate.toISOString(),
+  "author": {
+    "@type": "Organization",
+    "name": "موقع الأسئلة والأجوبة"
+  },
+  "publisher": {
+    "@type": "Organization", 
+    "name": "موقع الأسئلة والأجوبة"
+  },
+  "keywords": tags.join(", "),
+  "articleSection": "أسئلة وأجوبة"
+};
+---
+
+<BaseLayout 
+  title={pageTitle}
+  description={pageDescription}
+  ogImage={heroImage}
+>
+  <!-- Structured Data -->
+  <script type="application/ld+json" set:html={JSON.stringify(faqStructuredData)} is:inline />
+  <script type="application/ld+json" set:html={JSON.stringify(blogPostingStructuredData)} is:inline />
+
+  <!-- Breadcrumbs at the top before title -->
+  <Breadcrumbs items={breadcrumbItems} class="mb-6" />
+
+  <article class="space-y-8">
+    <!-- Question Header -->
+    <header class="space-y-4">
+      <h1 class="text-3xl md:text-4xl font-bold text-zinc-900 dark:text-zinc-100 leading-tight">
+        {question}
+      </h1>
+      
+      <!-- Metadata -->
+      <div class="flex flex-wrap items-center gap-4 text-sm text-zinc-600 dark:text-zinc-400">
+        <div class="flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          <time datetime={pubDate.toISOString()}>
+            نُشر في {formatDate(pubDate)}
+          </time>
+        </div>
+        
+        {updatedDate && (
+          <div class="flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            <time datetime={updatedDate.toISOString()}>
+              آخر تحديث {formatDate(updatedDate)}
+            </time>
+          </div>
+        )}
+        
+        <span class={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${difficultyColors[difficulty]}`}>
+          {difficultyLabels[difficulty]}
+        </span>
+      </div>
+
+      <!-- Tags -->
+      {tags.length > 0 && (
+        <div class="flex flex-wrap gap-2">
+          {tags.map((tag) => (
+            <a 
+              href={`/tags/${tag}`}
+              class="inline-flex items-center px-3 py-1 rounded-md text-sm font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300 hover:bg-indigo-200 dark:hover:bg-indigo-900/50 transition-colors"
+            >
+              #{tag}
+            </a>
+          ))}
+        </div>
+      )}
+    </header>
+
+    <!-- Hero Image -->
+    {heroImage && (
+      <div class="relative aspect-video rounded-lg overflow-hidden bg-zinc-100 dark:bg-zinc-800">
+        <img 
+          src={heroImage} 
+          alt={question}
+          class="w-full h-full object-cover"
+          loading="lazy"
+          width="800"
+          height="450"
+        />
+      </div>
+    )}
+
+    <!-- Short Answer Highlight -->
+    <div class="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg p-6">
+      <h2 class="text-lg font-semibold text-indigo-900 dark:text-indigo-100 mb-3 flex items-center gap-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+        </svg>
+        الإجابة المختصرة
+      </h2>
+      <p class="text-indigo-800 dark:text-indigo-200 text-lg leading-relaxed">
+        {shortAnswer}
+      </p>
+    </div>
+
+    <!-- Star Rating Component -->
+    <div class="flex justify-center">
+      <StarRating slug={entry.slug} client:visible />
+    </div>
+
+    <!-- Detailed Content -->
+    <div class="prose prose-lg prose-zinc dark:prose-invert max-w-none prose-headings:text-zinc-900 dark:prose-headings:text-zinc-100 prose-p:text-zinc-700 dark:prose-p:text-zinc-300 prose-a:text-indigo-600 dark:prose-a:text-indigo-400 prose-strong:text-zinc-900 dark:prose-strong:text-zinc-100">
+      <Content />
+    </div>
+
+    <!-- Related Questions -->
+    {relatedQuestions.length > 0 && (
+      <section class="border-t border-zinc-200 dark:border-zinc-800 pt-8">
+        <h2 class="text-2xl font-bold text-zinc-900 dark:text-zinc-100 mb-6 flex items-center gap-2">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+          </svg>
+          أسئلة ذات صلة
+        </h2>
+        <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {relatedQuestions.map((relatedQuestion) => (
+            <CardQuestion
+              href={`/q/${relatedQuestion.slug}`}
+              title={relatedQuestion.data.question}
+              description={relatedQuestion.data.shortAnswer}
+              date={relatedQuestion.data.pubDate}
+              tags={relatedQuestion.data.tags}
+              difficulty={relatedQuestion.data.difficulty}
+            />
+          ))}
+        </div>
+      </section>
+    )}
+  </article>
+</BaseLayout>

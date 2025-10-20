@@ -9,6 +9,13 @@
 			"status": 308
 		},
 		{
+			"src": "/q/([^/]+?)/",
+			"headers": {
+				"Location": "/q/$1"
+			},
+			"status": 308
+		},
+		{
 			"src": "^/_astro/(.*)$",
 			"headers": {
 				"cache-control": "public, max-age=31536000, immutable"
@@ -32,6 +39,10 @@
 		},
 		{
 			"src": "^\\/api\\/rate$",
+			"dest": "_render"
+		},
+		{
+			"src": "^\\/q\\/([^/]+?)$",
 			"dest": "_render"
 		},
 		{
