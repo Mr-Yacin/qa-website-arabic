@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
+import { loadRatings, generateUserId } from '../../lib/dataStorage.js';
 
-export const GET: APIRoute = async ({ url }) => {
+export const GET: APIRoute = async ({ url, request, clientAddress }) => {
   try {
     // Get slug from query parameters
     const slug = url.searchParams.get('slug');
@@ -10,7 +11,9 @@ export const GET: APIRoute = async ({ url }) => {
       return new Response(
         JSON.stringify({ 
           avg: null,
-          message: 'Missing slug parameter'
+          count: 0,
+          userRating: null,
+          message: 'معامل السؤال مطلوب' // Missing slug parameter in Arabic
         }),
         {
           status: 400,
@@ -19,22 +22,40 @@ export const GET: APIRoute = async ({ url }) => {
       );
     }
 
-    // TODO: Integrate with database to fetch average rating
-    // For now, return null to indicate no data available
-    // Future implementation should:
-    // 1. Connect to database
-    // 2. Query all ratings for the given slug
-    // 3. Calculate average rating
-    // 4. Return count of total ratings
-    // 5. Implement caching for better performance
+    // Load ratings data from persistent storage
+    const ratingsData = await loadRatings();
     
-    console.log(`Average rating requested for question: ${slug}`);
+    // Get user ID to check if they have rated this question
+    const userAgent = request.headers.get('user-agent') || '';
+    const ip = clientAddress || '127.0.0.1';
+    const userId = generateUserId(ip, userAgent);
+    
+    // Get rating data for this question
+    const questionRating = ratingsData[slug];
+    
+    let avg = null;
+    let count = 0;
+    let userRating = null;
+    
+    if (questionRating) {
+      avg = questionRating.average;
+      count = questionRating.count;
+      
+      // Check if current user has rated this question
+      if (userId in questionRating.ratings) {
+        userRating = questionRating.ratings[userId];
+      }
+    }
+    
+    console.log(`Average rating requested for question: ${slug} - avg: ${avg}, count: ${count}, userRating: ${userRating}`);
 
-    // Return response with caching headers
+    // Return response with caching headers and user's current rating
     return new Response(
       JSON.stringify({ 
-        avg: null, // Will be calculated from database in future
-        count: 0   // Number of ratings
+        avg,
+        count,
+        userRating,
+        hasRatings: count > 0
       }),
       {
         status: 200,
@@ -52,7 +73,9 @@ export const GET: APIRoute = async ({ url }) => {
     return new Response(
       JSON.stringify({ 
         avg: null,
-        message: 'Internal server error'
+        count: 0,
+        userRating: null,
+        message: 'خطأ في الخادم' // Server error in Arabic
       }),
       {
         status: 500,
