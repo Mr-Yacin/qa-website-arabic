@@ -196,6 +196,7 @@ export default function SearchBanner({
           aria-haspopup="listbox"
           aria-autocomplete="list"
           aria-describedby={error ? "search-error" : "search-help"}
+          aria-controls="search-suggestions"
           role="combobox"
         />
         
@@ -223,7 +224,7 @@ export default function SearchBanner({
               {error}
             </div>
           ) : suggestions.length > 0 ? (
-            <ul ref={dropdownRef} role="listbox" className="py-2" aria-label="نتائج البحث">
+            <ul ref={dropdownRef} id="search-suggestions" role="listbox" className="py-2" aria-label="نتائج البحث">
               {suggestions.map((suggestion, index) => (
                 <li
                   key={suggestion.slug}
