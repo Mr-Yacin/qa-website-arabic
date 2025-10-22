@@ -1,7 +1,24 @@
 import type { APIRoute } from 'astro';
-import { loadRatings, generateUserId } from '../../lib/dataStorage.js';
+import { createDatabaseConnection } from '../../lib/database.js';
+import crypto from 'crypto';
 
-export const GET: APIRoute = async ({ url, request, clientAddress }) => {
+// Privacy-friendly user identification using hashed IP + User-Agent
+function generateUserHash(request: Request): string {
+  const ip = request.headers.get('cf-connecting-ip') || 
+             request.headers.get('x-forwarded-for') || 
+             request.headers.get('x-real-ip') || 
+             '0.0.0.0';
+  const userAgent = request.headers.get('user-agent') || '';
+  const salt = process.env.HASH_SALT || 'default-salt';
+  
+  return crypto
+    .createHash('sha256')
+    .update(`${ip}|${userAgent}|${salt}`)
+    .digest('hex')
+    .slice(0, 16);
+}
+
+export const GET: APIRoute = async ({ url, request }) => {
   try {
     // Get slug from query parameters
     const slug = url.searchParams.get('slug');
@@ -22,30 +39,43 @@ export const GET: APIRoute = async ({ url, request, clientAddress }) => {
       );
     }
 
-    // Load ratings data from persistent storage
-    const ratingsData = await loadRatings();
+    // Get database connection
+    const sql = createDatabaseConnection();
     
-    // Get user ID to check if they have rated this question
-    const userAgent = request.headers.get('user-agent') || '';
-    const ip = clientAddress || '127.0.0.1';
-    const userId = generateUserId(ip, userAgent);
+    // Generate privacy-friendly user hash
+    const userHash = generateUserHash(request);
     
-    // Get rating data for this question
-    const questionRating = ratingsData[slug];
+    // Get rating aggregates from questions table and user's current rating
+    const [questionData] = await sql`
+      SELECT 
+        q.rating_avg::float AS avg,
+        q.rating_count::int AS count,
+        r.rating AS user_rating
+      FROM questions q
+      LEFT JOIN ratings r ON r.slug = q.slug AND r.user_hash = ${userHash}
+      WHERE q.slug = ${slug}
+      LIMIT 1
+    `;
     
-    let avg = null;
-    let count = 0;
-    let userRating = null;
-    
-    if (questionRating) {
-      avg = questionRating.average;
-      count = questionRating.count;
-      
-      // Check if current user has rated this question
-      if (userId in questionRating.ratings) {
-        userRating = questionRating.ratings[userId];
-      }
+    // Check if question exists
+    if (!questionData) {
+      return new Response(
+        JSON.stringify({ 
+          avg: null,
+          count: 0,
+          userRating: null,
+          message: 'السؤال غير موجود' // Question not found in Arabic
+        }),
+        {
+          status: 404,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
     }
+    
+    const avg = questionData.avg || null;
+    const count = questionData.count || 0;
+    const userRating = questionData.user_rating || null;
     
     console.log(`Average rating requested for question: ${slug} - avg: ${avg}, count: ${count}, userRating: ${userRating}`);
 
