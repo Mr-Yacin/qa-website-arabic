@@ -67,71 +67,187 @@ export async function searchQuestions(options: SearchOptions = {}): Promise<Sear
 
     try {
         const sql = getDatabase();
-        let baseQuery = sql`SELECT 
-      id, slug, question, short_answer as "shortAnswer", content, tags, 
-      difficulty, pub_date as "pubDate", updated_date as "updatedDate", 
-      hero_image as "heroImage", rating_sum as "ratingSum", 
-      rating_count as "ratingCount", rating_avg as "ratingAvg",
-      created_at as "createdAt", updated_at as "updatedAt"
-    FROM questions`;
+        
+        // Simple approach: build different queries based on filters
+        let questionsResult: any;
+        let countResult: any;
 
-        let countQuery = sql`SELECT COUNT(*) as total FROM questions`;
-        let whereConditions = [];
-
-        // Full-text search
-        if (query.trim()) {
+        if (query.trim() && tags.length > 0 && difficulty) {
+            // All filters
             const searchQuery = query.trim().replace(/[^\w\s\u0600-\u06FF]/g, '').split(/\s+/).join(' & ');
-            whereConditions.push(sql`search_vector @@ to_tsquery('simple', ${searchQuery})`);
-        }
-
-        // Tag filter
-        if (tags.length > 0) {
-            whereConditions.push(sql`tags && ${tags}`);
-        }
-
-        // Difficulty filter
-        if (difficulty) {
-            whereConditions.push(sql`difficulty = ${difficulty}`);
-        }
-
-        // Apply WHERE conditions
-        if (whereConditions.length > 0) {
-            const whereClause = whereConditions.reduce((acc, condition, index) => {
-                return index === 0 ? sql`WHERE ${condition}` : sql`${acc} AND ${condition}`;
-            });
-            baseQuery = sql`${baseQuery} ${whereClause}`;
-            countQuery = sql`${countQuery} ${whereClause}`;
-        }
-
-        // Apply ORDER BY
-        if (sortBy === 'date') {
-            const direction = sortOrder.toUpperCase();
-            if (direction === 'DESC') {
-                baseQuery = sql`${baseQuery} ORDER BY pub_date DESC`;
-            } else {
-                baseQuery = sql`${baseQuery} ORDER BY pub_date ASC`;
-            }
-        } else if (sortBy === 'rating') {
-            const direction = sortOrder.toUpperCase();
-            if (direction === 'DESC') {
-                baseQuery = sql`${baseQuery} ORDER BY rating_avg DESC, rating_count DESC`;
-            } else {
-                baseQuery = sql`${baseQuery} ORDER BY rating_avg ASC, rating_count ASC`;
-            }
+            questionsResult = await sql`
+                SELECT id, slug, question, short_answer as "shortAnswer", content, tags, 
+                       difficulty, pub_date as "pubDate", updated_date as "updatedDate", 
+                       hero_image as "heroImage", rating_sum as "ratingSum", 
+                       rating_count as "ratingCount", rating_avg as "ratingAvg",
+                       created_at as "createdAt", updated_at as "updatedAt"
+                FROM questions 
+                WHERE search_vector @@ to_tsquery('simple', ${searchQuery})
+                  AND tags && ${tags}
+                  AND difficulty = ${difficulty}
+                ORDER BY ts_rank(search_vector, to_tsquery('simple', ${searchQuery})) DESC, pub_date DESC
+                LIMIT ${limit} OFFSET ${offset}
+            `;
+            countResult = await sql`
+                SELECT COUNT(*) as total FROM questions 
+                WHERE search_vector @@ to_tsquery('simple', ${searchQuery})
+                  AND tags && ${tags}
+                  AND difficulty = ${difficulty}
+            `;
+        } else if (query.trim() && tags.length > 0) {
+            // Query + tags
+            const searchQuery = query.trim().replace(/[^\w\s\u0600-\u06FF]/g, '').split(/\s+/).join(' & ');
+            questionsResult = await sql`
+                SELECT id, slug, question, short_answer as "shortAnswer", content, tags, 
+                       difficulty, pub_date as "pubDate", updated_date as "updatedDate", 
+                       hero_image as "heroImage", rating_sum as "ratingSum", 
+                       rating_count as "ratingCount", rating_avg as "ratingAvg",
+                       created_at as "createdAt", updated_at as "updatedAt"
+                FROM questions 
+                WHERE search_vector @@ to_tsquery('simple', ${searchQuery})
+                  AND tags && ${tags}
+                ORDER BY ts_rank(search_vector, to_tsquery('simple', ${searchQuery})) DESC, pub_date DESC
+                LIMIT ${limit} OFFSET ${offset}
+            `;
+            countResult = await sql`
+                SELECT COUNT(*) as total FROM questions 
+                WHERE search_vector @@ to_tsquery('simple', ${searchQuery})
+                  AND tags && ${tags}
+            `;
+        } else if (query.trim() && difficulty) {
+            // Query + difficulty
+            const searchQuery = query.trim().replace(/[^\w\s\u0600-\u06FF]/g, '').split(/\s+/).join(' & ');
+            questionsResult = await sql`
+                SELECT id, slug, question, short_answer as "shortAnswer", content, tags, 
+                       difficulty, pub_date as "pubDate", updated_date as "updatedDate", 
+                       hero_image as "heroImage", rating_sum as "ratingSum", 
+                       rating_count as "ratingCount", rating_avg as "ratingAvg",
+                       created_at as "createdAt", updated_at as "updatedAt"
+                FROM questions 
+                WHERE search_vector @@ to_tsquery('simple', ${searchQuery})
+                  AND difficulty = ${difficulty}
+                ORDER BY ts_rank(search_vector, to_tsquery('simple', ${searchQuery})) DESC, pub_date DESC
+                LIMIT ${limit} OFFSET ${offset}
+            `;
+            countResult = await sql`
+                SELECT COUNT(*) as total FROM questions 
+                WHERE search_vector @@ to_tsquery('simple', ${searchQuery})
+                  AND difficulty = ${difficulty}
+            `;
         } else if (query.trim()) {
+            // Query only
             const searchQuery = query.trim().replace(/[^\w\s\u0600-\u06FF]/g, '').split(/\s+/).join(' & ');
-            baseQuery = sql`${baseQuery} ORDER BY ts_rank(search_vector, to_tsquery('simple', ${searchQuery})) DESC, pub_date DESC`;
+            questionsResult = await sql`
+                SELECT id, slug, question, short_answer as "shortAnswer", content, tags, 
+                       difficulty, pub_date as "pubDate", updated_date as "updatedDate", 
+                       hero_image as "heroImage", rating_sum as "ratingSum", 
+                       rating_count as "ratingCount", rating_avg as "ratingAvg",
+                       created_at as "createdAt", updated_at as "updatedAt"
+                FROM questions 
+                WHERE search_vector @@ to_tsquery('simple', ${searchQuery})
+                ORDER BY ts_rank(search_vector, to_tsquery('simple', ${searchQuery})) DESC, pub_date DESC
+                LIMIT ${limit} OFFSET ${offset}
+            `;
+            countResult = await sql`
+                SELECT COUNT(*) as total FROM questions 
+                WHERE search_vector @@ to_tsquery('simple', ${searchQuery})
+            `;
+        } else if (tags.length > 0 && difficulty) {
+            // Tags + difficulty
+            questionsResult = await sql`
+                SELECT id, slug, question, short_answer as "shortAnswer", content, tags, 
+                       difficulty, pub_date as "pubDate", updated_date as "updatedDate", 
+                       hero_image as "heroImage", rating_sum as "ratingSum", 
+                       rating_count as "ratingCount", rating_avg as "ratingAvg",
+                       created_at as "createdAt", updated_at as "updatedAt"
+                FROM questions 
+                WHERE tags && ${tags} AND difficulty = ${difficulty}
+                ORDER BY pub_date DESC
+                LIMIT ${limit} OFFSET ${offset}
+            `;
+            countResult = await sql`
+                SELECT COUNT(*) as total FROM questions 
+                WHERE tags && ${tags} AND difficulty = ${difficulty}
+            `;
+        } else if (tags.length > 0) {
+            // Tags only
+            questionsResult = await sql`
+                SELECT id, slug, question, short_answer as "shortAnswer", content, tags, 
+                       difficulty, pub_date as "pubDate", updated_date as "updatedDate", 
+                       hero_image as "heroImage", rating_sum as "ratingSum", 
+                       rating_count as "ratingCount", rating_avg as "ratingAvg",
+                       created_at as "createdAt", updated_at as "updatedAt"
+                FROM questions 
+                WHERE tags && ${tags}
+                ORDER BY pub_date DESC
+                LIMIT ${limit} OFFSET ${offset}
+            `;
+            countResult = await sql`
+                SELECT COUNT(*) as total FROM questions 
+                WHERE tags && ${tags}
+            `;
+        } else if (difficulty) {
+            // Difficulty only
+            questionsResult = await sql`
+                SELECT id, slug, question, short_answer as "shortAnswer", content, tags, 
+                       difficulty, pub_date as "pubDate", updated_date as "updatedDate", 
+                       hero_image as "heroImage", rating_sum as "ratingSum", 
+                       rating_count as "ratingCount", rating_avg as "ratingAvg",
+                       created_at as "createdAt", updated_at as "updatedAt"
+                FROM questions 
+                WHERE difficulty = ${difficulty}
+                ORDER BY pub_date DESC
+                LIMIT ${limit} OFFSET ${offset}
+            `;
+            countResult = await sql`
+                SELECT COUNT(*) as total FROM questions 
+                WHERE difficulty = ${difficulty}
+            `;
         } else {
-            baseQuery = sql`${baseQuery} ORDER BY pub_date DESC`;
+            // No filters - all questions
+            const orderBy = sortBy === 'date' 
+                ? (sortOrder === 'desc' ? 'pub_date DESC' : 'pub_date ASC')
+                : sortBy === 'rating'
+                ? (sortOrder === 'desc' ? 'rating_avg DESC, rating_count DESC' : 'rating_avg ASC, rating_count ASC')
+                : 'pub_date DESC';
+
+            if (orderBy === 'pub_date DESC') {
+                questionsResult = await sql`
+                    SELECT id, slug, question, short_answer as "shortAnswer", content, tags, 
+                           difficulty, pub_date as "pubDate", updated_date as "updatedDate", 
+                           hero_image as "heroImage", rating_sum as "ratingSum", 
+                           rating_count as "ratingCount", rating_avg as "ratingAvg",
+                           created_at as "createdAt", updated_at as "updatedAt"
+                    FROM questions 
+                    ORDER BY pub_date DESC
+                    LIMIT ${limit} OFFSET ${offset}
+                `;
+            } else if (orderBy === 'rating_avg DESC, rating_count DESC') {
+                questionsResult = await sql`
+                    SELECT id, slug, question, short_answer as "shortAnswer", content, tags, 
+                           difficulty, pub_date as "pubDate", updated_date as "updatedDate", 
+                           hero_image as "heroImage", rating_sum as "ratingSum", 
+                           rating_count as "ratingCount", rating_avg as "ratingAvg",
+                           created_at as "createdAt", updated_at as "updatedAt"
+                    FROM questions 
+                    ORDER BY rating_avg DESC, rating_count DESC
+                    LIMIT ${limit} OFFSET ${offset}
+                `;
+            } else {
+                questionsResult = await sql`
+                    SELECT id, slug, question, short_answer as "shortAnswer", content, tags, 
+                           difficulty, pub_date as "pubDate", updated_date as "updatedDate", 
+                           hero_image as "heroImage", rating_sum as "ratingSum", 
+                           rating_count as "ratingCount", rating_avg as "ratingAvg",
+                           created_at as "createdAt", updated_at as "updatedAt"
+                    FROM questions 
+                    ORDER BY pub_date ASC
+                    LIMIT ${limit} OFFSET ${offset}
+                `;
+            }
+            
+            countResult = await sql`SELECT COUNT(*) as total FROM questions`;
         }
-
-        // Apply LIMIT and OFFSET
-        baseQuery = sql`${baseQuery} LIMIT ${limit} OFFSET ${offset}`;
-
-        const [countResult, questionsResult] = await Promise.all([
-            countQuery,
-            baseQuery
-        ]);
 
         const total = parseInt((countResult as any)[0]?.total || '0');
         const questions = questionsResult as Question[];

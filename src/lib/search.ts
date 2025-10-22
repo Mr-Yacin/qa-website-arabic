@@ -21,23 +21,51 @@ interface FileSearchIndex {
 
 async function loadFileSearchIndex(): Promise<FileSearchIndex | null> {
   try {
-    // In server-side context, read from file system
+    // In server-side context, try multiple locations
     if (typeof window === 'undefined') {
       const fs = await import('fs/promises');
       const path = await import('path');
       
-      const indexPath = path.join(process.cwd(), 'data', 'search-index.json');
-      const data = await fs.readFile(indexPath, 'utf-8');
-      return JSON.parse(data);
+      // Try different locations for the search index
+      const possiblePaths = [
+        path.join(process.cwd(), 'data', 'search-index.json'),
+        path.join(process.cwd(), 'src', 'data', 'search-index.json'),
+        path.join(process.cwd(), 'public', 'data', 'search-index.json')
+      ];
+      
+      for (const indexPath of possiblePaths) {
+        try {
+          const data = await fs.readFile(indexPath, 'utf-8');
+          return JSON.parse(data);
+        } catch {
+          // Try next path
+          continue;
+        }
+      }
+      
+      // If no file found, return minimal fallback
+      console.warn('No search index file found, using empty index');
+      return {
+        questions: [],
+        lastUpdated: new Date().toISOString()
+      };
     }
     
     // In client-side context, fetch from public directory
     const response = await fetch('/data/search-index.json');
-    if (!response.ok) return null;
+    if (!response.ok) {
+      return {
+        questions: [],
+        lastUpdated: new Date().toISOString()
+      };
+    }
     return await response.json();
   } catch (error) {
     console.warn('Failed to load search index:', error);
-    return null;
+    return {
+      questions: [],
+      lastUpdated: new Date().toISOString()
+    };
   }
 }
 
