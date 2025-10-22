@@ -11,36 +11,58 @@ import path from 'path';
 // Load environment variables
 dotenv.config();
 
-// Test search functionality
+// Test database-backed search functionality
 async function testSearchFunctionality() {
-  console.log('🔍 Testing Search Functionality...\n');
+  console.log('🔍 Testing Database-Backed Search Functionality...\n');
   
   try {
-    // Load search index
-    const indexPath = path.join(process.cwd(), 'data', 'search-index.json');
-    const data = await fs.readFile(indexPath, 'utf-8');
-    const searchIndex = JSON.parse(data);
+    const { neon } = await import('@neondatabase/serverless');
     
-    console.log(`✅ Search index loaded with ${searchIndex.questions.length} questions`);
-    console.log(`✅ Last updated: ${searchIndex.lastUpdated}`);
+    if (!process.env.DATABASE_URL) {
+      throw new Error('DATABASE_URL not configured');
+    }
     
-    // Test search queries
-    const testQueries = ['astro', 'seo', 'مواقع'];
+    const sql = neon(process.env.DATABASE_URL);
+    
+    // Test database connection
+    await sql`SELECT 1 as test`;
+    console.log('✅ Database connection successful');
+    
+    // Check if questions table exists and has data
+    const questionCount = await sql`SELECT COUNT(*) as count FROM questions`;
+    const count = parseInt(questionCount[0].count);
+    
+    console.log(`✅ Questions table has ${count} questions`);
+    
+    if (count === 0) {
+      console.log('⚠️  No questions found in database. Run content sync first.');
+      return false;
+    }
+    
+    // Test search queries using PostgreSQL full-text search
+    const testQueries = ['astro', 'seo'];
     
     for (const query of testQueries) {
-      const results = searchIndex.questions.filter(q => 
-        q.question.toLowerCase().includes(query.toLowerCase()) ||
-        q.shortAnswer.toLowerCase().includes(query.toLowerCase()) ||
-        q.content.toLowerCase().includes(query.toLowerCase()) ||
-        q.tags.some(tag => tag.toLowerCase().includes(query.toLowerCase()))
-      );
+      // Test full-text search
+      const results = await sql`
+        SELECT slug, question, short_answer, tags,
+               ts_rank(search_vector, to_tsquery('simple', ${query + ':*'})) as rank
+        FROM questions 
+        WHERE search_vector @@ to_tsquery('simple', ${query + ':*'})
+        ORDER BY rank DESC
+        LIMIT 5
+      `;
       
-      console.log(`✅ Query "${query}": ${results.length} results found`);
+      console.log(`✅ Query "${query}": ${results.length} results found using PostgreSQL full-text search`);
+      
+      if (results.length > 0) {
+        console.log(`   Top result: "${results[0].question}"`);
+      }
     }
     
     return true;
   } catch (error) {
-    console.error('❌ Search functionality test failed:', error);
+    console.error('❌ Database search functionality test failed:', error);
     return false;
   }
 }

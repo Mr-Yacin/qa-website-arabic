@@ -35,7 +35,8 @@ npm run setup-db
 ## 5. Generate Search Index
 
 ```bash
-node scripts/generate-search-index.mjs
+# Search index is now automatically maintained in the database
+# No manual search index generation needed
 ```
 
 ## 6. Run Development Server

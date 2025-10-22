@@ -14,10 +14,8 @@ export default function StarRating({ slug, initialData }) {
     if (typeof window !== 'undefined') {
       // If we have initial data, use it and skip the API call for better performance
       if (initialData && (initialData.average !== null || initialData.userRating !== null)) {
-        // Still sync with localStorage for consistency
-        if (initialData.userRating) {
-          localStorage.setItem(`rating:${slug}`, initialData.userRating.toString());
-        }
+        // Use database-sourced initial data directly
+        // No localStorage synchronization needed - database is the single source of truth
       } else {
         // No initial data, load from API
         loadExistingRating();
@@ -57,31 +55,12 @@ export default function StarRating({ slug, initialData }) {
         if (data.userRating) {
           setRating(data.userRating);
           setHasRated(true);
-          // Also save to localStorage for consistency
-          localStorage.setItem(`rating:${slug}`, data.userRating.toString());
-        } else {
-          // Check localStorage as fallback for offline scenarios
-          const savedRating = localStorage.getItem(`rating:${slug}`);
-          if (savedRating) {
-            const parsedRating = parseInt(savedRating, 10);
-            if (parsedRating >= 1 && parsedRating <= 5) {
-              setRating(parsedRating);
-              setHasRated(true);
-            }
-          }
         }
+        // Database is the single source of truth - no localStorage fallback needed
       }
     } catch (error) {
       console.error('Error loading existing rating:', error);
-      // Fallback to localStorage for offline scenarios
-      const savedRating = localStorage.getItem(`rating:${slug}`);
-      if (savedRating) {
-        const parsedRating = parseInt(savedRating, 10);
-        if (parsedRating >= 1 && parsedRating <= 5) {
-          setRating(parsedRating);
-          setHasRated(true);
-        }
-      }
+      // No localStorage fallback - database-first approach
     }
   };
 
@@ -90,17 +69,18 @@ export default function StarRating({ slug, initialData }) {
     if (isSubmitting) return;
 
     const wasUpdate = hasRated && rating !== newRating;
+    const previousRating = rating;
+    const previousHasRated = hasRated;
+    
     setIsSubmitting(true);
     setIsUpdating(wasUpdate);
     
+    // Optimistic UI update for instant feedback
+    setRating(newRating);
+    setHasRated(true);
+    
     try {
-      // Save to localStorage immediately for instant feedback
-      localStorage.setItem(`rating:${slug}`, newRating.toString());
-      const previousRating = rating;
-      setRating(newRating);
-      setHasRated(true);
-
-      // Submit to API
+      // Submit to database-backed API
       const response = await fetch(`/api/rate?slug=${encodeURIComponent(slug)}`, {
         method: 'POST',
         headers: {
@@ -119,29 +99,19 @@ export default function StarRating({ slug, initialData }) {
           console.warn('Rating API returned error:', data.message);
           // Revert to previous state
           setRating(previousRating);
-          if (!hasRated) {
-            setHasRated(false);
-            localStorage.removeItem(`rating:${slug}`);
-          }
+          setHasRated(previousHasRated);
         }
       } else {
         // If API fails, revert to previous state
         console.warn('Failed to submit rating to server');
         setRating(previousRating);
-        if (!hasRated) {
-          setHasRated(false);
-          localStorage.removeItem(`rating:${slug}`);
-        }
+        setHasRated(previousHasRated);
       }
     } catch (error) {
       console.error('Error submitting rating:', error);
       // Revert to previous state on error
-      const previousRating = rating;
       setRating(previousRating);
-      if (!hasRated) {
-        setHasRated(false);
-        localStorage.removeItem(`rating:${slug}`);
-      }
+      setHasRated(previousHasRated);
     } finally {
       setIsSubmitting(false);
       setIsUpdating(false);

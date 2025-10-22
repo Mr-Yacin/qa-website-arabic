@@ -116,20 +116,31 @@
     - Test integration between components and database APIs
     - _Requirements: 2.4, 2.5_
 
-- [ ] 6. Remove conflicting file-based storage systems
-  - [ ] 6.1 Eliminate file-based rating storage
+- [x] 6. Remove conflicting file-based storage systems
+
+
+
+
+
+  - [x] 6.1 Eliminate file-based rating storage
+
+
     - Remove or deprecate existing JSON file-based rating system
     - Update any remaining file-based rating utilities
     - Ensure all rating operations use database exclusively
     - _Requirements: 2.1, 2.5_
 
-  - [ ] 6.2 Remove conflicting search index files
+  - [x] 6.2 Remove conflicting search index files
+
+
     - Eliminate search_index JSONB approach and related files
     - Remove file-based search utilities that conflict with database approach
     - Clean up any remaining file-based search dependencies
     - _Requirements: 3.1, 3.5_
 
-- [ ] 7. Setup CI/CD integration and testing
+- [-] 7. Setup CI/CD integration and testing
+
+
   - [ ] 7.1 Create GitHub Action for automatic content sync
     - Add workflow to trigger /api/reindex on markdown content changes
     - Configure secrets for SITE_URL and REINDEX_TOKEN

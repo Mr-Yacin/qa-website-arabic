@@ -63,50 +63,45 @@ async function testVercelReadiness() {
       console.log('   ❌ Contact save failed:', error.message);
     }
     
-    // Test 3: Search Index in Database
-    console.log('\n3️⃣  Testing Search Index in Database...');
+    // Test 3: Search Vectors in Questions Table
+    console.log('\n3️⃣  Testing Search Vectors in Questions Table...');
     try {
-      const [searchIndex] = await sql`
-        SELECT questions_data, last_updated 
-        FROM search_index 
-        ORDER BY last_updated DESC 
-        LIMIT 1
+      const questionCount = await sql`
+        SELECT COUNT(*) as count 
+        FROM questions 
+        WHERE search_vector IS NOT NULL
       `;
       
-      if (searchIndex && Array.isArray(searchIndex.questions_data)) {
-        console.log(`   ✅ Search index found with ${searchIndex.questions_data.length} questions`);
+      const count = parseInt(questionCount[0].count);
+      if (count > 0) {
+        console.log(`   ✅ Search vectors found for ${count} questions`);
         results.searchIndex = true;
       } else {
-        console.log('   ❌ Search index not found or invalid');
+        console.log('   ❌ No search vectors found in questions table');
       }
     } catch (error) {
-      console.log('   ❌ Search index check failed:', error.message);
+      console.log('   ❌ Search vector check failed:', error.message);
     }
     
     // Test 4: Search API Logic
     console.log('\n4️⃣  Testing Search API Logic...');
     try {
-      const [searchIndex] = await sql`
-        SELECT questions_data FROM search_index 
-        ORDER BY last_updated DESC 
-        LIMIT 1
+      const testQuery = 'astro';
+      const searchResults = await sql`
+        SELECT slug, question, short_answer, tags,
+               ts_rank(search_vector, to_tsquery('simple', ${testQuery + ':*'})) as rank
+        FROM questions 
+        WHERE search_vector @@ to_tsquery('simple', ${testQuery + ':*'})
+        ORDER BY rank DESC
+        LIMIT 5
       `;
       
-      if (searchIndex && searchIndex.questions_data.length > 0) {
-        const testQuery = 'astro';
-        const results_search = searchIndex.questions_data.filter(item => 
-          item.question.toLowerCase().includes(testQuery.toLowerCase())
-        );
-        
-        if (results_search.length > 0) {
-          console.log(`   ✅ Search API logic working (found ${results_search.length} results for "${testQuery}")`);
-          results.searchAPI = true;
-        } else {
-          console.log('   ⚠️  Search API logic working but no results found');
-          results.searchAPI = true; // Still working, just no matches
-        }
+      if (searchResults.length > 0) {
+        console.log(`   ✅ Search API logic working (found ${searchResults.length} results for "${testQuery}")`);
+        results.searchAPI = true;
       } else {
-        console.log('   ❌ No search data available for testing');
+        console.log('   ⚠️  Search API logic working but no results found');
+        results.searchAPI = true; // Still working, just no matches
       }
     } catch (error) {
       console.log('   ❌ Search API logic test failed:', error.message);

@@ -50,7 +50,7 @@ npm run setup-db
 This creates:
 - `ratings` table for question ratings
 - `contacts` table for contact form submissions  
-- `search_index` table for search functionality
+- Search vectors integrated directly into `questions` table (replaces old `search_index` table)
 - Appropriate indexes for performance
 
 ### 4. Migrate Existing Data (Optional)
@@ -110,13 +110,28 @@ CREATE TABLE contacts (
 );
 ```
 
-### Search Index Table
+### Search Functionality (Integrated into Questions Table)
 ```sql
-CREATE TABLE search_index (
-  id SERIAL PRIMARY KEY,
-  questions_data JSONB NOT NULL,
-  last_updated TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+-- Search vectors are now part of the questions table
+-- No separate search_index table needed
+ALTER TABLE questions ADD COLUMN search_vector TSVECTOR;
+CREATE INDEX idx_questions_tsv ON questions USING GIN (search_vector);
+
+-- Automatic search vector update trigger
+CREATE OR REPLACE FUNCTION update_search_vector() RETURNS trigger AS $
+BEGIN
+  NEW.search_vector := to_tsvector('simple',
+    coalesce(NEW.question,'') || ' ' ||
+    coalesce(NEW.short_answer,'') || ' ' ||
+    coalesce(NEW.content,'')
+  );
+  RETURN NEW;
+END;
+$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_update_search_vector
+  BEFORE INSERT OR UPDATE ON questions
+  FOR EACH ROW EXECUTE PROCEDURE update_search_vector();
 ```
 
 ## Features After Migration

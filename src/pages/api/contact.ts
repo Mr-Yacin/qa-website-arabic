@@ -1,7 +1,33 @@
 import type { APIRoute } from 'astro';
-import { saveContactMessage, generateId } from '../../lib/dataStorage.js';
-import type { ContactFormData } from '../../lib/dataStorage.js';
+import { createDatabaseConnection } from '../../lib/database.js';
 import { Resend } from 'resend';
+
+// Contact form data interface
+interface ContactFormData {
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+  timestamp: Date;
+  id: string;
+}
+
+// Generate unique ID for contact messages
+function generateId(): string {
+  return Date.now().toString() + Math.random().toString(36).substring(2, 11);
+}
+
+// Save contact message directly to database
+async function saveContactMessage(contactData: ContactFormData): Promise<void> {
+  const sql = createDatabaseConnection();
+  
+  await sql`
+    INSERT INTO contacts (id, name, email, subject, message, timestamp)
+    VALUES (${contactData.id}, ${contactData.name}, ${contactData.email}, ${contactData.subject}, ${contactData.message}, ${contactData.timestamp.toISOString()})
+  `;
+  
+  console.log('Contact message saved to database:', contactData.id);
+}
 
 // Admin email configuration
 const ADMIN_EMAIL = import.meta.env.ADMIN_EMAIL || process.env.ADMIN_EMAIL || 'admin@qa-site.com';
