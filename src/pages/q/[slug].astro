@@ -29,6 +29,39 @@ const { question, shortAnswer, pubDate, updatedDate, tags, difficulty, heroImage
 const allQuestions = await getCollection('qa');
 const relatedQuestions = relatedByTags(entry, allQuestions, 3);
 
+// Load initial rating data for better hydration
+let initialRatingData = {
+  average: null,
+  count: 0,
+  userRating: null
+};
+
+try {
+  // Import data storage functions
+  const { loadRatings, generateUserId } = await import('../../lib/dataStorage.js');
+  
+  // Load ratings data
+  const ratingsData = await loadRatings();
+  const questionRating = ratingsData[entry.slug];
+  
+  if (questionRating) {
+    initialRatingData.average = questionRating.average;
+    initialRatingData.count = questionRating.count;
+    
+    // Generate user ID to check if they have rated this question
+    const userAgent = Astro.request.headers.get('user-agent') || '';
+    const ip = Astro.clientAddress || '127.0.0.1';
+    const userId = generateUserId(ip, userAgent);
+    
+    if (userId in questionRating.ratings) {
+      initialRatingData.userRating = questionRating.ratings[userId];
+    }
+  }
+} catch (error) {
+  console.warn('Failed to load initial rating data:', error);
+  // Continue with default values
+}
+
 // Breadcrumb items
 const breadcrumbItems = [
   { label: 'الرئيسية', href: '/' },
@@ -230,23 +263,49 @@ const breadcrumbStructuredData = {
 
     <!-- Star Rating Component -->
     <div class="flex justify-center" id="rating-container">
-      <!-- Static fallback that will be replaced by React component -->
-      <div class="rating-fallback flex flex-col items-center gap-3 p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-700 transition-colors duration-200">
+      <!-- Enhanced static fallback with initial data -->
+      <div id="rating-fallback" class="rating-fallback flex flex-col items-center gap-3 p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-700 transition-all duration-300 min-h-[140px] w-full max-w-md">
         <h3 class="text-lg font-semibold text-zinc-900 dark:text-zinc-100 transition-colors duration-200">
           قيم هذا السؤال
         </h3>
-        <div class="flex gap-1">
-          <span class="text-2xl text-zinc-300 dark:text-zinc-600">★</span>
-          <span class="text-2xl text-zinc-300 dark:text-zinc-600">★</span>
-          <span class="text-2xl text-zinc-300 dark:text-zinc-600">★</span>
-          <span class="text-2xl text-zinc-300 dark:text-zinc-600">★</span>
-          <span class="text-2xl text-zinc-300 dark:text-zinc-600">★</span>
+        <div class="flex gap-1" role="radiogroup" aria-label="تقييم السؤال من 1 إلى 5 نجوم">
+          {[1, 2, 3, 4, 5].map((star) => (
+            <span class={`text-2xl transition-all duration-200 rounded ${
+              initialRatingData.userRating && star <= initialRatingData.userRating 
+                ? 'text-yellow-400 dark:text-yellow-300' + (star === initialRatingData.userRating ? ' drop-shadow-lg' : '')
+                : 'text-zinc-300 dark:text-zinc-600'
+            }`} aria-label={`${star} ${star === 1 ? 'نجمة' : 'نجوم'}`}>★</span>
+          ))}
         </div>
-        <p class="text-sm text-zinc-500 dark:text-zinc-500 text-center">
-          جاري التحميل...
-        </p>
+        {initialRatingData.average !== null && initialRatingData.count > 0 ? (
+          <div class="text-sm text-zinc-600 dark:text-zinc-400 text-center transition-colors duration-200">
+            <span>متوسط التقييم: {initialRatingData.average.toFixed(1)} من 5</span>
+            <span class="mx-2">•</span>
+            <span>({initialRatingData.count} {initialRatingData.count === 1 ? 'تقييم' : 'تقييمات'})</span>
+          </div>
+        ) : (
+          <p class="text-sm text-zinc-500 dark:text-zinc-500 text-center">
+            جاري التحميل...
+          </p>
+        )}
+        {initialRatingData.userRating && (
+          <p class="text-sm text-green-600 dark:text-green-400 text-center transition-colors duration-200">
+            تقييمك: {initialRatingData.userRating} {initialRatingData.userRating === 1 ? 'نجمة' : 'نجوم'} - يمكنك تغييره بالضغط على نجمة أخرى
+          </p>
+        )}
+        {!initialRatingData.userRating && (
+          <p class="text-sm text-zinc-500 dark:text-zinc-500 text-center transition-colors duration-200">
+            اضغط على النجوم لإعطاء تقييم
+          </p>
+        )}
       </div>
-      <StarRating slug={entry.slug} client:load />
+      <div id="rating-react" class="hidden">
+        <StarRating 
+          slug={entry.slug} 
+          initialData={initialRatingData}
+          client:load 
+        />
+      </div>
     </div>
 
     <!-- Detailed Content -->

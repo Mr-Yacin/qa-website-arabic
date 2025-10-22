@@ -4,6 +4,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import CardQuestion from '../../components/CardQuestion.astro';
 import { paginate } from '../../lib/paginate';
 
+export const prerender = true;
+
 export async function getStaticPaths() {
   // Get all Q&A entries and sort by publication date (newest first)
   const allQuestions = await getCollection('qa');

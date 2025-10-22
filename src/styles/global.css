@@ -293,4 +293,26 @@
   .text-responsive-lg { font-size: clamp(1.125rem, 3.5vw, 1.25rem); }
   .text-responsive-xl { font-size: clamp(1.25rem, 4vw, 1.5rem); }
   .text-responsive-2xl { font-size: clamp(1.5rem, 5vw, 2rem); }
+  
+  /* Line clamp utilities */
+  .line-clamp-1 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+  }
+  
+  .line-clamp-2 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+  
+  .line-clamp-3 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+  }
 }
