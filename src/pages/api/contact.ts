@@ -19,7 +19,7 @@ async function sendAdminNotification(contactData: ContactFormData): Promise<void
   console.log('Environment check - process.env exists:', !!process.env.RESEND_API_KEY);
   
   if (!resendApiKey) {
-    console.warn('RESEND_API_KEY not configured, skipping email notification');
+    console.info('Email notifications disabled (RESEND_API_KEY not configured). Contact message saved to database.');
     return;
   }
 
