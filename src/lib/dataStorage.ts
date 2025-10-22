@@ -1,3 +1,6 @@
+// @ts-ignore - Neon types may not be available during build
+import { neon } from '@neondatabase/serverless';
+
 // Type definitions for data structures
 export interface RatingData {
   [questionSlug: string]: {
@@ -36,9 +39,8 @@ export interface SearchIndex {
   lastUpdated: Date | null;
 }
 
-// Check if we're in a Vercel environment with KV available
-const isVercel: boolean = typeof process !== 'undefined' && Boolean(process.env.VERCEL);
-const hasKvCredentials: boolean = Boolean(process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN);
+// Database connection
+const sql = process.env.DATABASE_URL ? neon(process.env.DATABASE_URL) : null;
 
 // Check if we're in any serverless environment
 const isServerless: boolean = typeof process !== 'undefined' && Boolean(
@@ -48,128 +50,210 @@ const isServerless: boolean = typeof process !== 'undefined' && Boolean(
   process.env.NODE_ENV === 'production'
 );
 
-// In-memory fallback storage for environments without KV
+// In-memory fallback storage for environments without database
 let ratingsCache: RatingData = {};
 let contactsCache: ContactStorage = { messages: [], lastId: 0 };
 let searchIndexCache: SearchIndex = { questions: [], lastUpdated: null };
 
 /**
- * Load data from Vercel KV, file system (development), or in-memory cache (fallback)
+ * Initialize database tables if they don't exist
  */
-async function loadFromStorage<T>(cacheKey: 'ratings' | 'contacts' | 'searchIndex', defaultValue: T): Promise<T> {
-  // Try Vercel KV first if available
-  if (isVercel && hasKvCredentials) {
-    try {
-      const { kv } = await import('@vercel/kv');
-      const data = await kv.get<T>(cacheKey);
-      if (data !== null) {
-        return data;
-      }
-    } catch (error) {
-      console.warn(`Failed to load from Vercel KV for ${cacheKey}:`, error);
-      // Fall through to other storage methods
-    }
-  }
+async function initializeTables(): Promise<void> {
+  if (!sql) return;
 
-  // In serverless environment without KV, use in-memory cache
-  if (isServerless) {
-    switch (cacheKey) {
-      case 'ratings':
-        return ratingsCache as T;
-      case 'contacts':
-        return contactsCache as T;
-      case 'searchIndex':
-        return searchIndexCache as T;
-      default:
-        return defaultValue;
-    }
-  }
-
-  // In development, try to load from file system
   try {
-    const { promises: fs } = await import('fs');
-    const path = await import('path');
-    
-    const DATA_DIR = 'data';
-    const fileName = `${cacheKey}.json`;
-    const filePath = path.join(DATA_DIR, fileName);
-    
-    const data = await fs.readFile(filePath, 'utf-8');
-    return JSON.parse(data);
+    // Create ratings table
+    await sql`
+      CREATE TABLE IF NOT EXISTS ratings (
+        question_slug VARCHAR(255) PRIMARY KEY,
+        ratings_data JSONB NOT NULL,
+        average DECIMAL(3,2) NOT NULL DEFAULT 0,
+        count INTEGER NOT NULL DEFAULT 0,
+        last_updated TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      )
+    `;
+
+    // Create contacts table
+    await sql`
+      CREATE TABLE IF NOT EXISTS contacts (
+        id VARCHAR(255) PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        email VARCHAR(255) NOT NULL,
+        subject VARCHAR(500) NOT NULL,
+        message TEXT NOT NULL,
+        timestamp TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      )
+    `;
+
+    // Create search_index table
+    await sql`
+      CREATE TABLE IF NOT EXISTS search_index (
+        id SERIAL PRIMARY KEY,
+        questions_data JSONB NOT NULL,
+        last_updated TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      )
+    `;
+
+    // Create indexes for better performance
+    await sql`CREATE INDEX IF NOT EXISTS idx_ratings_slug ON ratings(question_slug)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_contacts_timestamp ON contacts(timestamp DESC)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_search_updated ON search_index(last_updated DESC)`;
+
   } catch (error) {
-    // File doesn't exist or can't be read, return default
-    return defaultValue;
+    console.error('Error initializing database tables:', error);
   }
 }
 
 /**
- * Save data to Vercel KV, file system (development), or in-memory cache (fallback)
+ * Load data from Neon database or fallback to in-memory cache
+ */
+async function loadFromStorage<T>(cacheKey: 'ratings' | 'contacts' | 'searchIndex', defaultValue: T): Promise<T> {
+  // Try Neon database first if available
+  if (sql) {
+    try {
+      await initializeTables();
+      
+      switch (cacheKey) {
+        case 'ratings': {
+          const rows = await sql`SELECT question_slug, ratings_data, average, count, last_updated FROM ratings`;
+          const ratingsData: RatingData = {};
+          
+          for (const row of rows as any[]) {
+            ratingsData[row.question_slug] = {
+              ratings: row.ratings_data,
+              average: parseFloat(row.average),
+              count: row.count,
+              lastUpdated: new Date(row.last_updated)
+            };
+          }
+          
+          return ratingsData as T;
+        }
+        
+        case 'contacts': {
+          const rows = await sql`SELECT id, name, email, subject, message, timestamp FROM contacts ORDER BY timestamp DESC`;
+          const contacts: ContactStorage = {
+            messages: (rows as any[]).map((row: any) => ({
+              id: row.id,
+              name: row.name,
+              email: row.email,
+              subject: row.subject,
+              message: row.message,
+              timestamp: new Date(row.timestamp)
+            })),
+            lastId: rows.length > 0 ? Math.max(...(rows as any[]).map((r: any) => parseInt(r.id) || 0)) : 0
+          };
+          
+          return contacts as T;
+        }
+        
+        case 'searchIndex': {
+          const [row] = await sql`SELECT questions_data, last_updated FROM search_index ORDER BY last_updated DESC LIMIT 1`;
+          
+          if (row) {
+            return {
+              questions: row.questions_data,
+              lastUpdated: new Date(row.last_updated)
+            } as T;
+          }
+          
+          return defaultValue;
+        }
+      }
+    } catch (error) {
+      console.warn(`Failed to load from Neon database for ${cacheKey}:`, error);
+      // Fall through to in-memory cache
+    }
+  }
+
+  // Fallback to in-memory cache
+  switch (cacheKey) {
+    case 'ratings':
+      return ratingsCache as T;
+    case 'contacts':
+      return contactsCache as T;
+    case 'searchIndex':
+      return searchIndexCache as T;
+    default:
+      return defaultValue;
+  }
+}
+
+/**
+ * Save data to Neon database or fallback to in-memory cache
  */
 async function saveToStorage<T>(cacheKey: 'ratings' | 'contacts' | 'searchIndex', data: T): Promise<void> {
-  // Try Vercel KV first if available
-  if (isVercel && hasKvCredentials) {
+  // Try Neon database first if available
+  if (sql) {
     try {
-      const { kv } = await import('@vercel/kv');
-      await kv.set(cacheKey, data);
-      console.log(`Successfully saved ${cacheKey} to Vercel KV`);
-      return;
+      await initializeTables();
+      
+      switch (cacheKey) {
+        case 'ratings': {
+          const ratingsData = data as RatingData;
+          
+          // Clear existing ratings and insert new ones
+          await sql`DELETE FROM ratings`;
+          
+          for (const [slug, ratingInfo] of Object.entries(ratingsData)) {
+            await sql`
+              INSERT INTO ratings (question_slug, ratings_data, average, count, last_updated)
+              VALUES (${slug}, ${JSON.stringify(ratingInfo.ratings)}, ${ratingInfo.average}, ${ratingInfo.count}, ${ratingInfo.lastUpdated.toISOString()})
+              ON CONFLICT (question_slug) 
+              DO UPDATE SET 
+                ratings_data = EXCLUDED.ratings_data,
+                average = EXCLUDED.average,
+                count = EXCLUDED.count,
+                last_updated = EXCLUDED.last_updated
+            `;
+          }
+          
+          console.log('Successfully saved ratings to Neon database');
+          return;
+        }
+        
+        case 'searchIndex': {
+          const searchIndex = data as SearchIndex;
+          
+          await sql`
+            INSERT INTO search_index (questions_data, last_updated)
+            VALUES (${JSON.stringify(searchIndex.questions)}, ${searchIndex.lastUpdated?.toISOString() || new Date().toISOString()})
+          `;
+          
+          // Keep only the latest 5 search index entries
+          await sql`
+            DELETE FROM search_index 
+            WHERE id NOT IN (
+              SELECT id FROM search_index 
+              ORDER BY last_updated DESC 
+              LIMIT 5
+            )
+          `;
+          
+          console.log('Successfully saved search index to Neon database');
+          return;
+        }
+      }
     } catch (error) {
-      console.warn(`Failed to save to Vercel KV for ${cacheKey}:`, error);
-      // Fall through to other storage methods
+      console.warn(`Failed to save to Neon database for ${cacheKey}:`, error);
+      // Fall through to in-memory cache
     }
   }
 
-  // In serverless environment without KV, update in-memory cache
-  if (isServerless) {
-    switch (cacheKey) {
-      case 'ratings':
-        ratingsCache = data as RatingData;
-        break;
-      case 'contacts':
-        contactsCache = data as ContactStorage;
-        break;
-      case 'searchIndex':
-        searchIndexCache = data as SearchIndex;
-        break;
-    }
-    console.log(`Saved ${cacheKey} to in-memory cache (serverless fallback)`);
-    return;
+  // Fallback to in-memory cache
+  switch (cacheKey) {
+    case 'ratings':
+      ratingsCache = data as RatingData;
+      break;
+    case 'contacts':
+      contactsCache = data as ContactStorage;
+      break;
+    case 'searchIndex':
+      searchIndexCache = data as SearchIndex;
+      break;
   }
-
-  // In development, save to file system
-  try {
-    const { promises: fs } = await import('fs');
-    const path = await import('path');
-    
-    const DATA_DIR = 'data';
-    const fileName = `${cacheKey}.json`;
-    const filePath = path.join(DATA_DIR, fileName);
-    
-    // Ensure directory exists
-    try {
-      await fs.access(DATA_DIR);
-    } catch {
-      await fs.mkdir(DATA_DIR, { recursive: true });
-    }
-    
-    const jsonData = JSON.stringify(data, null, 2);
-    await fs.writeFile(filePath, jsonData, 'utf-8');
-    console.log(`Saved ${cacheKey} to file system`);
-  } catch (error) {
-    console.error(`Error saving data for ${cacheKey}:`, error);
-    // In case of file system error, still update cache
-    switch (cacheKey) {
-      case 'ratings':
-        ratingsCache = data as RatingData;
-        break;
-      case 'contacts':
-        contactsCache = data as ContactStorage;
-        break;
-      case 'searchIndex':
-        searchIndexCache = data as SearchIndex;
-        break;
-    }
-  }
+  
+  console.log(`Saved ${cacheKey} to in-memory cache (database fallback)`);
 }
 
 // Rating data functions
@@ -191,6 +275,25 @@ export async function saveContacts(contacts: ContactStorage): Promise<void> {
 }
 
 export async function saveContactMessage(message: ContactFormData): Promise<void> {
+  // Try to save directly to Neon database first
+  if (sql) {
+    try {
+      await initializeTables();
+      
+      await sql`
+        INSERT INTO contacts (id, name, email, subject, message, timestamp)
+        VALUES (${message.id}, ${message.name}, ${message.email}, ${message.subject}, ${message.message}, ${message.timestamp.toISOString()})
+      `;
+      
+      console.log('Successfully saved contact message to Neon database');
+      return;
+    } catch (error) {
+      console.warn('Failed to save contact message to Neon database:', error);
+      // Fall through to legacy method
+    }
+  }
+
+  // Fallback to loading all contacts and updating
   const contacts = await loadContacts();
   contacts.messages.push(message);
   contacts.lastId = Math.max(contacts.lastId, parseInt(message.id) || 0);
@@ -227,15 +330,13 @@ export function generateUserId(ip: string, userAgent: string): string {
  * Validates that data storage is available
  */
 export async function validateDataStorage(): Promise<boolean> {
-  // Test Vercel KV if available
-  if (isVercel && hasKvCredentials) {
+  // Test Neon database if available
+  if (sql) {
     try {
-      const { kv } = await import('@vercel/kv');
-      await kv.set('_test', 'test');
-      await kv.del('_test');
+      await sql`SELECT 1 as test`;
       return true;
     } catch (error) {
-      console.warn('Vercel KV validation failed:', error);
+      console.warn('Neon database validation failed:', error);
       // Fall through to other validation methods
     }
   }
@@ -271,14 +372,14 @@ export async function validateDataStorage(): Promise<boolean> {
  * Gets information about the current storage method
  */
 export function getStorageInfo(): { 
-  type: 'vercel-kv' | 'memory' | 'filesystem'; 
+  type: 'neon-db' | 'memory' | 'filesystem'; 
   isServerless: boolean; 
-  hasKv: boolean;
+  hasDatabase: boolean;
 } {
-  let type: 'vercel-kv' | 'memory' | 'filesystem';
+  let type: 'neon-db' | 'memory' | 'filesystem';
   
-  if (isVercel && hasKvCredentials) {
-    type = 'vercel-kv';
+  if (sql) {
+    type = 'neon-db';
   } else if (isServerless) {
     type = 'memory';
   } else {
@@ -288,6 +389,6 @@ export function getStorageInfo(): {
   return {
     type,
     isServerless,
-    hasKv: hasKvCredentials
+    hasDatabase: Boolean(sql)
   };
 }
