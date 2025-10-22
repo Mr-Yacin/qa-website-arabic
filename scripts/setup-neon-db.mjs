@@ -46,18 +46,32 @@ async function setupDatabase() {
     `;
     console.log('✓ Created unified questions table');
 
-    // Create normalized ratings table with foreign key constraint
+    // Create normalized ratings table
     await sql`
       CREATE TABLE IF NOT EXISTS ratings (
         slug TEXT NOT NULL,
         user_hash TEXT NOT NULL,
         rating INT NOT NULL CHECK (rating BETWEEN 1 AND 5),
         created_at TIMESTAMPTZ DEFAULT NOW(),
-        PRIMARY KEY (slug, user_hash),
-        CONSTRAINT fk_ratings_question FOREIGN KEY (slug) REFERENCES questions(slug) ON DELETE CASCADE
+        PRIMARY KEY (slug, user_hash)
       )
     `;
     console.log('✓ Created normalized ratings table');
+
+    // Add foreign key constraint if it doesn't exist
+    try {
+      await sql`
+        ALTER TABLE ratings 
+        ADD CONSTRAINT fk_ratings_question 
+        FOREIGN KEY (slug) REFERENCES questions(slug) ON DELETE CASCADE
+      `;
+      console.log('✓ Added foreign key constraint');
+    } catch (error) {
+      if (error.code !== '42710') { // Constraint already exists
+        throw error;
+      }
+      console.log('✓ Foreign key constraint already exists');
+    }
 
     // Create contacts table (keeping existing functionality)
     await sql`

@@ -1,0 +1,56 @@
+name: Sync Content to Database
+
+on:
+  push:
+    branches: [main]
+    paths: 
+      - 'src/content/qa/**'
+      - 'src/content/config.ts'
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  sync-content:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Wait for deployment
+        run: |
+          echo "Waiting 60 seconds for Vercel deployment to complete..."
+          sleep 60
+          
+      - name: Trigger content reindex
+        run: |
+          response=$(curl -s -w "%{http_code}" -X POST "${{ secrets.SITE_URL }}/api/reindex" \
+            -H "Authorization: Bearer ${{ secrets.REINDEX_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -o response.json)
+          
+          echo "HTTP Status: $response"
+          echo "Response:"
+          cat response.json
+          
+          if [ "$response" -ne 200 ]; then
+            echo "❌ Content sync failed with status $response"
+            exit 1
+          else
+            echo "✅ Content sync completed successfully"
+          fi
+          
+      - name: Verify sync results
+        run: |
+          if [ -f response.json ]; then
+            processed=$(cat response.json | grep -o '"processed":[0-9]*' | cut -d':' -f2)
+            errors=$(cat response.json | grep -o '"errors":[0-9]*' | cut -d':' -f2)
+            
+            echo "📊 Sync Summary:"
+            echo "  - Processed: $processed questions"
+            echo "  - Errors: $errors"
+            
+            if [ "$errors" -gt 0 ]; then
+              echo "⚠️  Some questions had errors during sync"
+              exit 1
+            fi
+          fi

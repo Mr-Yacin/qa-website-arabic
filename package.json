@@ -11,7 +11,11 @@
     "astro": "astro",
     "setup-db": "node scripts/setup-neon-db.mjs",
     "migrate-to-neon": "node scripts/migrate-kv-to-neon.mjs",
-
+    "reset-db": "node scripts/reset-database-schema.mjs",
+    "test-db": "node scripts/test-all-database-features.mjs",
+    "test-schema": "node scripts/test-database-schema.mjs",
+    "test-api": "node scripts/test-api-endpoints.mjs",
+    "test-consistency": "node scripts/test-data-model-consistency.mjs",
     "test-vercel": "node scripts/test-vercel-ready.mjs"
   },
   "dependencies": {
