@@ -1,369 +1,315 @@
 /**
- * Database utilities for questions with full-text search
- * Optimized for 500+ questions
+ * Database connection utilities with error handling and configuration
  */
 
 import { neon } from '@neondatabase/serverless';
 
-let sql: ReturnType<typeof neon> | null = null;
+// Database connection interface
+export interface DatabaseConnection {
+  sql: (query: TemplateStringsArray, ...values: any[]) => Promise<any[]>;
+}
 
-function getDatabase() {
-    if (!sql) {
-        if (!process.env.DATABASE_URL) {
-            throw new Error('DATABASE_URL environment variable is required');
-        }
-        sql = neon(process.env.DATABASE_URL);
+// Database configuration
+interface DatabaseConfig {
+  url: string;
+  maxConnections?: number;
+  connectionTimeout?: number;
+  retryAttempts?: number;
+  retryDelay?: number;
+}
+
+// Connection pool management
+class DatabasePool {
+  private static instance: DatabasePool;
+  private connections: Map<string, any> = new Map();
+  
+  static getInstance(): DatabasePool {
+    if (!DatabasePool.instance) {
+      DatabasePool.instance = new DatabasePool();
     }
-    return sql;
+    return DatabasePool.instance;
+  }
+  
+  getConnection(url: string): any {
+    if (!this.connections.has(url)) {
+      this.connections.set(url, neon(url));
+    }
+    return this.connections.get(url);
+  }
+  
+  clearConnections(): void {
+    this.connections.clear();
+  }
 }
 
-export interface Question {
-    id: number;
-    slug: string;
-    question: string;
-    shortAnswer: string;
-    content: string;
-    tags: string[];
-    difficulty: 'easy' | 'medium' | 'hard';
-    pubDate: Date;
-    updatedDate?: Date;
-    heroImage?: string;
-    ratingSum: number;
-    ratingCount: number;
-    ratingAvg: number;
-    createdAt: Date;
-    updatedAt: Date;
+// Create database connection with error handling
+export function createDatabaseConnection(config?: Partial<DatabaseConfig>): any {
+  const dbUrl = config?.url || process.env.DATABASE_URL;
+  
+  if (!dbUrl) {
+    throw new Error('Database URL is required. Set DATABASE_URL environment variable or provide url in config.');
+  }
+  
+  // Validate URL format
+  try {
+    new URL(dbUrl);
+  } catch (error) {
+    throw new Error('Invalid database URL format. Expected: postgresql://user:pass@host:port/db');
+  }
+  
+  const pool = DatabasePool.getInstance();
+  return pool.getConnection(dbUrl);
 }
 
-export interface SearchOptions {
-    query?: string;
-    tags?: string[];
-    difficulty?: string;
-    limit?: number;
-    offset?: number;
-    sortBy?: 'date' | 'rating' | 'relevance';
-    sortOrder?: 'asc' | 'desc';
+// Test database connection
+export async function testDatabaseConnection(sql?: any): Promise<boolean> {
+  try {
+    const connection = sql || createDatabaseConnection();
+    await connection`SELECT 1 as test`;
+    return true;
+  } catch (error) {
+    console.error('Database connection test failed:', error);
+    return false;
+  }
 }
 
-export interface SearchResult {
-    questions: Question[];
-    total: number;
-    hasMore: boolean;
-}
-
-/**
- * Search questions with full-text search and filters
- */
-export async function searchQuestions(options: SearchOptions = {}): Promise<SearchResult> {
-    const {
-        query = '',
-        tags = [],
-        difficulty,
-        limit = 10,
-        offset = 0,
-        sortBy = 'relevance',
-        sortOrder = 'desc'
-    } = options;
-
+// Execute query with retry logic
+export async function executeQuery<T = any>(
+  sql: any,
+  query: (sql: any) => Promise<T>,
+  retryAttempts: number = 3,
+  retryDelay: number = 1000
+): Promise<T> {
+  let lastError: Error;
+  
+  for (let attempt = 1; attempt <= retryAttempts; attempt++) {
     try {
-        const sql = getDatabase();
+      return await query(sql);
+    } catch (error) {
+      lastError = error as Error;
+      
+      // Don't retry on certain errors
+      if (isNonRetryableError(error)) {
+        throw error;
+      }
+      
+      if (attempt < retryAttempts) {
+        console.warn(`Query attempt ${attempt} failed, retrying in ${retryDelay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, retryDelay));
+        retryDelay *= 2; // Exponential backoff
+      }
+    }
+  }
+  
+  throw lastError!;
+}
+
+// Check if error should not be retried
+function isNonRetryableError(error: any): boolean {
+  const nonRetryableErrors = [
+    'syntax error',
+    'permission denied',
+    'relation does not exist',
+    'column does not exist',
+    'duplicate key value',
+    'foreign key constraint',
+    'check constraint'
+  ];
+  
+  const errorMessage = error?.message?.toLowerCase() || '';
+  return nonRetryableErrors.some(pattern => errorMessage.includes(pattern));
+}
+
+// Database health check
+export async function checkDatabaseHealth(): Promise<{
+  connected: boolean;
+  tablesExist: boolean;
+  indexesExist: boolean;
+  error?: string;
+}> {
+  try {
+    const sql = createDatabaseConnection();
+    
+    // Test basic connection
+    await sql`SELECT 1 as test`;
+    
+    // Check if required tables exist
+    const tables = await sql`
+      SELECT table_name 
+      FROM information_schema.tables 
+      WHERE table_name IN ('questions', 'ratings', 'contacts')
+      AND table_schema = 'public'
+    `;
+    
+    const requiredTables = ['questions', 'ratings', 'contacts'];
+    const existingTables = tables.map((t: any) => t.table_name);
+    const tablesExist = requiredTables.every(table => existingTables.includes(table));
+    
+    // Check if indexes exist
+    const indexes = await sql`
+      SELECT indexname 
+      FROM pg_indexes 
+      WHERE indexname IN ('idx_questions_tsv', 'idx_questions_slug', 'idx_ratings_slug')
+      AND schemaname = 'public'
+    `;
+    
+    const requiredIndexes = ['idx_questions_tsv', 'idx_questions_slug', 'idx_ratings_slug'];
+    const existingIndexes = indexes.map((i: any) => i.indexname);
+    const indexesExist = requiredIndexes.every(index => existingIndexes.includes(index));
+    
+    return {
+      connected: true,
+      tablesExist,
+      indexesExist
+    };
+    
+  } catch (error) {
+    return {
+      connected: false,
+      tablesExist: false,
+      indexesExist: false,
+      error: (error as Error).message
+    };
+  }
+}
+
+// Environment configuration validation
+export function validateDatabaseEnvironment(): {
+  valid: boolean;
+  missing: string[];
+  warnings: string[];
+} {
+  const required = ['DATABASE_URL'];
+  const optional = ['HASH_SALT', 'REINDEX_TOKEN'];
+  
+  const missing = required.filter(env => !process.env[env]);
+  const warnings = optional.filter(env => !process.env[env]);
+  
+  return {
+    valid: missing.length === 0,
+    missing,
+    warnings
+  };
+}
+
+// Transaction wrapper
+export async function withTransaction<T>(
+  sql: any,
+  callback: (sql: any) => Promise<T>
+): Promise<T> {
+  try {
+    await sql`BEGIN`;
+    const result = await callback(sql);
+    await sql`COMMIT`;
+    return result;
+  } catch (error) {
+    await sql`ROLLBACK`;
+    throw error;
+  }
+}
+
+// Common database operations
+export const DatabaseOperations = {
+  // Get question by slug with rating data
+  async getQuestionWithRatings(sql: any, slug: string) {
+    return executeQuery(sql, async (sql) => {
+      const [question] = await sql`
+        SELECT q.*, 
+               COALESCE(r.rating, 0) as user_rating
+        FROM questions q
+        LEFT JOIN ratings r ON r.slug = q.slug AND r.user_hash = ${slug}
+        WHERE q.slug = ${slug}
+        LIMIT 1
+      `;
+      return question;
+    });
+  },
+  
+  // Update rating with aggregate recalculation
+  async updateRating(sql: any, slug: string, userHash: string, rating: number) {
+    return withTransaction(sql, async (sql) => {
+      // Upsert rating
+      await sql`
+        INSERT INTO ratings (slug, user_hash, rating)
+        VALUES (${slug}, ${userHash}, ${rating})
+        ON CONFLICT (slug, user_hash) 
+        DO UPDATE SET rating = EXCLUDED.rating, created_at = NOW()
+      `;
+      
+      // Update aggregates
+      await sql`
+        UPDATE questions q SET
+          rating_sum = (SELECT COALESCE(SUM(rating), 0) FROM ratings WHERE slug = ${slug}),
+          rating_count = (SELECT COUNT(*) FROM ratings WHERE slug = ${slug}),
+          updated_at = NOW()
+        WHERE q.slug = ${slug}
+      `;
+      
+      // Return updated aggregates
+      const [result] = await sql`
+        SELECT rating_avg::float AS average, rating_count::int AS count 
+        FROM questions WHERE slug = ${slug} LIMIT 1
+      `;
+      
+      return result;
+    });
+  },
+  
+  // Search questions with pagination
+  async searchQuestions(sql: any, query: string, page: number = 1, limit: number = 10) {
+    const offset = (page - 1) * limit;
+    
+    return executeQuery(sql, async (sql) => {
+      let results, countResult;
+      
+      if (query.length >= 3) {
+        // Use full-text search for longer queries
+        results = await sql`
+          SELECT slug, question, short_answer, tags,
+                 ts_rank(search_vector, to_tsquery('simple', ${query + ':*'})) as rank
+          FROM questions 
+          WHERE search_vector @@ to_tsquery('simple', ${query + ':*'})
+          ORDER BY rank DESC, pub_date DESC
+          LIMIT ${limit} OFFSET ${offset}
+        `;
         
-        // Simple approach: build different queries based on filters
-        let questionsResult: any;
-        let countResult: any;
-
-        if (query.trim() && tags.length > 0 && difficulty) {
-            // All filters
-            const searchQuery = query.trim().replace(/[^\w\s\u0600-\u06FF]/g, '').split(/\s+/).join(' & ');
-            questionsResult = await sql`
-                SELECT id, slug, question, short_answer as "shortAnswer", content, tags, 
-                       difficulty, pub_date as "pubDate", updated_date as "updatedDate", 
-                       hero_image as "heroImage", rating_sum as "ratingSum", 
-                       rating_count as "ratingCount", rating_avg as "ratingAvg",
-                       created_at as "createdAt", updated_at as "updatedAt"
-                FROM questions 
-                WHERE search_vector @@ to_tsquery('simple', ${searchQuery})
-                  AND tags && ${tags}
-                  AND difficulty = ${difficulty}
-                ORDER BY ts_rank(search_vector, to_tsquery('simple', ${searchQuery})) DESC, pub_date DESC
-                LIMIT ${limit} OFFSET ${offset}
-            `;
-            countResult = await sql`
-                SELECT COUNT(*) as total FROM questions 
-                WHERE search_vector @@ to_tsquery('simple', ${searchQuery})
-                  AND tags && ${tags}
-                  AND difficulty = ${difficulty}
-            `;
-        } else if (query.trim() && tags.length > 0) {
-            // Query + tags
-            const searchQuery = query.trim().replace(/[^\w\s\u0600-\u06FF]/g, '').split(/\s+/).join(' & ');
-            questionsResult = await sql`
-                SELECT id, slug, question, short_answer as "shortAnswer", content, tags, 
-                       difficulty, pub_date as "pubDate", updated_date as "updatedDate", 
-                       hero_image as "heroImage", rating_sum as "ratingSum", 
-                       rating_count as "ratingCount", rating_avg as "ratingAvg",
-                       created_at as "createdAt", updated_at as "updatedAt"
-                FROM questions 
-                WHERE search_vector @@ to_tsquery('simple', ${searchQuery})
-                  AND tags && ${tags}
-                ORDER BY ts_rank(search_vector, to_tsquery('simple', ${searchQuery})) DESC, pub_date DESC
-                LIMIT ${limit} OFFSET ${offset}
-            `;
-            countResult = await sql`
-                SELECT COUNT(*) as total FROM questions 
-                WHERE search_vector @@ to_tsquery('simple', ${searchQuery})
-                  AND tags && ${tags}
-            `;
-        } else if (query.trim() && difficulty) {
-            // Query + difficulty
-            const searchQuery = query.trim().replace(/[^\w\s\u0600-\u06FF]/g, '').split(/\s+/).join(' & ');
-            questionsResult = await sql`
-                SELECT id, slug, question, short_answer as "shortAnswer", content, tags, 
-                       difficulty, pub_date as "pubDate", updated_date as "updatedDate", 
-                       hero_image as "heroImage", rating_sum as "ratingSum", 
-                       rating_count as "ratingCount", rating_avg as "ratingAvg",
-                       created_at as "createdAt", updated_at as "updatedAt"
-                FROM questions 
-                WHERE search_vector @@ to_tsquery('simple', ${searchQuery})
-                  AND difficulty = ${difficulty}
-                ORDER BY ts_rank(search_vector, to_tsquery('simple', ${searchQuery})) DESC, pub_date DESC
-                LIMIT ${limit} OFFSET ${offset}
-            `;
-            countResult = await sql`
-                SELECT COUNT(*) as total FROM questions 
-                WHERE search_vector @@ to_tsquery('simple', ${searchQuery})
-                  AND difficulty = ${difficulty}
-            `;
-        } else if (query.trim()) {
-            // Query only
-            const searchQuery = query.trim().replace(/[^\w\s\u0600-\u06FF]/g, '').split(/\s+/).join(' & ');
-            questionsResult = await sql`
-                SELECT id, slug, question, short_answer as "shortAnswer", content, tags, 
-                       difficulty, pub_date as "pubDate", updated_date as "updatedDate", 
-                       hero_image as "heroImage", rating_sum as "ratingSum", 
-                       rating_count as "ratingCount", rating_avg as "ratingAvg",
-                       created_at as "createdAt", updated_at as "updatedAt"
-                FROM questions 
-                WHERE search_vector @@ to_tsquery('simple', ${searchQuery})
-                ORDER BY ts_rank(search_vector, to_tsquery('simple', ${searchQuery})) DESC, pub_date DESC
-                LIMIT ${limit} OFFSET ${offset}
-            `;
-            countResult = await sql`
-                SELECT COUNT(*) as total FROM questions 
-                WHERE search_vector @@ to_tsquery('simple', ${searchQuery})
-            `;
-        } else if (tags.length > 0 && difficulty) {
-            // Tags + difficulty
-            questionsResult = await sql`
-                SELECT id, slug, question, short_answer as "shortAnswer", content, tags, 
-                       difficulty, pub_date as "pubDate", updated_date as "updatedDate", 
-                       hero_image as "heroImage", rating_sum as "ratingSum", 
-                       rating_count as "ratingCount", rating_avg as "ratingAvg",
-                       created_at as "createdAt", updated_at as "updatedAt"
-                FROM questions 
-                WHERE tags && ${tags} AND difficulty = ${difficulty}
-                ORDER BY pub_date DESC
-                LIMIT ${limit} OFFSET ${offset}
-            `;
-            countResult = await sql`
-                SELECT COUNT(*) as total FROM questions 
-                WHERE tags && ${tags} AND difficulty = ${difficulty}
-            `;
-        } else if (tags.length > 0) {
-            // Tags only
-            questionsResult = await sql`
-                SELECT id, slug, question, short_answer as "shortAnswer", content, tags, 
-                       difficulty, pub_date as "pubDate", updated_date as "updatedDate", 
-                       hero_image as "heroImage", rating_sum as "ratingSum", 
-                       rating_count as "ratingCount", rating_avg as "ratingAvg",
-                       created_at as "createdAt", updated_at as "updatedAt"
-                FROM questions 
-                WHERE tags && ${tags}
-                ORDER BY pub_date DESC
-                LIMIT ${limit} OFFSET ${offset}
-            `;
-            countResult = await sql`
-                SELECT COUNT(*) as total FROM questions 
-                WHERE tags && ${tags}
-            `;
-        } else if (difficulty) {
-            // Difficulty only
-            questionsResult = await sql`
-                SELECT id, slug, question, short_answer as "shortAnswer", content, tags, 
-                       difficulty, pub_date as "pubDate", updated_date as "updatedDate", 
-                       hero_image as "heroImage", rating_sum as "ratingSum", 
-                       rating_count as "ratingCount", rating_avg as "ratingAvg",
-                       created_at as "createdAt", updated_at as "updatedAt"
-                FROM questions 
-                WHERE difficulty = ${difficulty}
-                ORDER BY pub_date DESC
-                LIMIT ${limit} OFFSET ${offset}
-            `;
-            countResult = await sql`
-                SELECT COUNT(*) as total FROM questions 
-                WHERE difficulty = ${difficulty}
-            `;
-        } else {
-            // No filters - all questions
-            const orderBy = sortBy === 'date' 
-                ? (sortOrder === 'desc' ? 'pub_date DESC' : 'pub_date ASC')
-                : sortBy === 'rating'
-                ? (sortOrder === 'desc' ? 'rating_avg DESC, rating_count DESC' : 'rating_avg ASC, rating_count ASC')
-                : 'pub_date DESC';
-
-            if (orderBy === 'pub_date DESC') {
-                questionsResult = await sql`
-                    SELECT id, slug, question, short_answer as "shortAnswer", content, tags, 
-                           difficulty, pub_date as "pubDate", updated_date as "updatedDate", 
-                           hero_image as "heroImage", rating_sum as "ratingSum", 
-                           rating_count as "ratingCount", rating_avg as "ratingAvg",
-                           created_at as "createdAt", updated_at as "updatedAt"
-                    FROM questions 
-                    ORDER BY pub_date DESC
-                    LIMIT ${limit} OFFSET ${offset}
-                `;
-            } else if (orderBy === 'rating_avg DESC, rating_count DESC') {
-                questionsResult = await sql`
-                    SELECT id, slug, question, short_answer as "shortAnswer", content, tags, 
-                           difficulty, pub_date as "pubDate", updated_date as "updatedDate", 
-                           hero_image as "heroImage", rating_sum as "ratingSum", 
-                           rating_count as "ratingCount", rating_avg as "ratingAvg",
-                           created_at as "createdAt", updated_at as "updatedAt"
-                    FROM questions 
-                    ORDER BY rating_avg DESC, rating_count DESC
-                    LIMIT ${limit} OFFSET ${offset}
-                `;
-            } else {
-                questionsResult = await sql`
-                    SELECT id, slug, question, short_answer as "shortAnswer", content, tags, 
-                           difficulty, pub_date as "pubDate", updated_date as "updatedDate", 
-                           hero_image as "heroImage", rating_sum as "ratingSum", 
-                           rating_count as "ratingCount", rating_avg as "ratingAvg",
-                           created_at as "createdAt", updated_at as "updatedAt"
-                    FROM questions 
-                    ORDER BY pub_date ASC
-                    LIMIT ${limit} OFFSET ${offset}
-                `;
-            }
-            
-            countResult = await sql`SELECT COUNT(*) as total FROM questions`;
+        countResult = await sql`
+          SELECT COUNT(*) as total
+          FROM questions 
+          WHERE search_vector @@ to_tsquery('simple', ${query + ':*'})
+        `;
+      } else {
+        // Use ILIKE for short queries
+        results = await sql`
+          SELECT slug, question, short_answer, tags, 0 as rank
+          FROM questions 
+          WHERE question ILIKE ${`%${query}%`} OR short_answer ILIKE ${`%${query}%`}
+          ORDER BY pub_date DESC
+          LIMIT ${limit} OFFSET ${offset}
+        `;
+        
+        countResult = await sql`
+          SELECT COUNT(*) as total
+          FROM questions 
+          WHERE question ILIKE ${`%${query}%`} OR short_answer ILIKE ${`%${query}%`}
+        `;
+      }
+      
+      const total = countResult[0]?.total || 0;
+      const hasMore = offset + results.length < total;
+      
+      return {
+        results,
+        pagination: {
+          page,
+          limit,
+          total: parseInt(total),
+          hasMore
         }
+      };
+    });
+  }
+};
 
-        const total = parseInt((countResult as any)[0]?.total || '0');
-        const questions = questionsResult as Question[];
-        const hasMore = offset + limit < total;
-
-        return {
-            questions,
-            total,
-            hasMore
-        };
-    } catch (error) {
-        console.error('Search error:', error);
-        throw new Error('Failed to search questions');
-    }
-}
-
-/**
- * Get question by slug
- */
-export async function getQuestionBySlug(slug: string): Promise<Question | null> {
-    try {
-        const sql = getDatabase();
-        const result = await sql`
-      SELECT 
-        id, slug, question, short_answer as "shortAnswer", content, tags, 
-        difficulty, pub_date as "pubDate", updated_date as "updatedDate", 
-        hero_image as "heroImage", rating_sum as "ratingSum", 
-        rating_count as "ratingCount", rating_avg as "ratingAvg",
-        created_at as "createdAt", updated_at as "updatedAt"
-      FROM questions 
-      WHERE slug = ${slug}
-    `;
-
-        return (result as any)[0] as Question || null;
-    } catch (error) {
-        console.error('Get question error:', error);
-        return null;
-    }
-}
-
-/**
- * Get related questions based on tags
- */
-export async function getRelatedQuestions(slug: string, limit: number = 5): Promise<Question[]> {
-    try {
-        const sql = getDatabase();
-        const result = await sql`
-      WITH current_question AS (
-        SELECT tags FROM questions WHERE slug = ${slug}
-      )
-      SELECT 
-        q.id, q.slug, q.question, q.short_answer as "shortAnswer", q.content, q.tags, 
-        q.difficulty, q.pub_date as "pubDate", q.updated_date as "updatedDate", 
-        q.hero_image as "heroImage", q.rating_sum as "ratingSum", 
-        q.rating_count as "ratingCount", q.rating_avg as "ratingAvg",
-        q.created_at as "createdAt", q.updated_at as "updatedAt"
-      FROM questions q, current_question cq
-      WHERE q.slug != ${slug}
-        AND q.tags && cq.tags
-      ORDER BY 
-        array_length(array(SELECT unnest(q.tags) INTERSECT SELECT unnest(cq.tags)), 1) DESC,
-        q.rating_avg DESC,
-        q.pub_date DESC
-      LIMIT ${limit}
-    `;
-
-        return result as Question[];
-    } catch (error) {
-        console.error('Get related questions error:', error);
-        return [];
-    }
-}
-
-/**
- * Get popular tags with question counts
- */
-export async function getPopularTags(limit: number = 20): Promise<Array<{ tag: string, count: number }>> {
-    try {
-        const sql = getDatabase();
-        const result = await sql`
-      SELECT 
-        tag,
-        COUNT(*) as count
-      FROM questions, unnest(tags) as tag
-      GROUP BY tag
-      ORDER BY count DESC, tag ASC
-      LIMIT ${limit}
-    `;
-
-        return (result as any[]).map((row: any) => ({
-            tag: row.tag,
-            count: parseInt(row.count)
-        }));
-    } catch (error) {
-        console.error('Get popular tags error:', error);
-        return [];
-    }
-}
-
-/**
- * Update question rating
- */
-export async function updateQuestionRating(slug: string, rating: number): Promise<boolean> {
-    try {
-        const sql = getDatabase();
-        await sql`
-      UPDATE questions 
-      SET 
-        rating_sum = rating_sum + ${rating},
-        rating_count = rating_count + 1,
-        rating_avg = ROUND((rating_sum + ${rating})::decimal / (rating_count + 1), 2)
-      WHERE slug = ${slug}
-    `;
-        return true;
-    } catch (error) {
-        console.error('Update rating error:', error);
-        return false;
-    }
-}
+// Export default connection for convenience
+export const sql = createDatabaseConnection();
