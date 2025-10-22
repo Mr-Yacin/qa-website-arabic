@@ -171,11 +171,10 @@ export default function SearchBanner({
     }
   }, [selectedIndex]);
 
-  // Strip HTML tags for display (from highlighted results)
+  // Safely strip HTML tags using regex (safer than DOM manipulation)
   const stripHtml = (html) => {
-    const div = document.createElement('div');
-    div.innerHTML = html;
-    return div.textContent || div.innerText || '';
+    if (!html || typeof html !== 'string') return '';
+    return html.replace(/<[^>]*>/g, '').trim();
   };
 
   return (
@@ -240,16 +239,14 @@ export default function SearchBanner({
                 >
                   <div className="flex flex-col gap-1 text-right">
                     {/* Question Title */}
-                    <div 
-                      className="font-medium text-sm sm:text-base leading-tight mobile-optimized"
-                      dangerouslySetInnerHTML={{ __html: suggestion.question }}
-                    />
+                    <div className="font-medium text-sm sm:text-base leading-tight mobile-optimized">
+                      {stripHtml(suggestion.question)}
+                    </div>
                     
                     {/* Short Answer */}
-                    <div 
-                      className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 line-clamp-2 mobile-optimized"
-                      dangerouslySetInnerHTML={{ __html: suggestion.shortAnswer }}
-                    />
+                    <div className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 line-clamp-2 mobile-optimized">
+                      {stripHtml(suggestion.shortAnswer)}
+                    </div>
                     
                     {/* Tags */}
                     {suggestion.tags && suggestion.tags.length > 0 && (
