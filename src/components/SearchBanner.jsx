@@ -54,8 +54,9 @@ export default function SearchBanner({
         }
 
         const data = await response.json();
-        setSuggestions(data.suggestions || []);
-        setIsOpen(data.suggestions?.length > 0);
+        const newSuggestions = data.suggestions || [];
+        setSuggestions(newSuggestions);
+        setIsOpen(newSuggestions.length > 0 && searchQuery.trim().length >= 2);
         setSelectedIndex(-1);
       } catch (error) {
         if (error.name !== 'AbortError') {
@@ -129,17 +130,20 @@ export default function SearchBanner({
 
   // Handle input focus
   const handleInputFocus = () => {
-    if (suggestions.length > 0) {
+    if (suggestions.length > 0 && query.trim().length >= 2) {
       setIsOpen(true);
     }
   };
 
   // Handle input blur (with delay to allow clicks)
   const handleInputBlur = () => {
+    // Only close if not interacting with dropdown
     setTimeout(() => {
-      setIsOpen(false);
-      setSelectedIndex(-1);
-    }, 200);
+      if (!dropdownRef.current?.matches(':hover')) {
+        setIsOpen(false);
+        setSelectedIndex(-1);
+      }
+    }, 150);
   };
 
   // Clean up on unmount
@@ -210,7 +214,11 @@ export default function SearchBanner({
 
       {/* Suggestions Dropdown */}
       {isOpen && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg shadow-lg z-50 max-h-80 sm:max-h-96 overflow-y-auto transition-all duration-200">
+        <div 
+          className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg shadow-lg z-50 max-h-80 sm:max-h-96 overflow-y-auto transition-all duration-200"
+          onMouseEnter={() => {/* Keep dropdown open on hover */}}
+          onMouseLeave={() => {/* Allow dropdown to close */}}
+        >
           {error ? (
             <div id="search-error" className="p-4 text-red-600 dark:text-red-400 text-center" role="alert">
               {error}

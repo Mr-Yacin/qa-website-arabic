@@ -1,137 +1,212 @@
-import { getCollection, type CollectionEntry } from 'astro:content';
-import fs from 'fs/promises';
-import path from 'path';
+/**
+ * Unified search interface that uses database in production and file-based search in development
+ */
 
-export interface SearchIndexItem {
-  slug: string;
-  question: string;
-  shortAnswer: string;
-  content: string; // First 200 chars for search
-  tags: string[];
-  searchTerms: string[]; // Processed search terms
-  difficulty: string;
-  pubDate: string;
-}
+import type { Question, SearchOptions, SearchResult } from './database';
 
-export interface SearchIndex {
-  questions: SearchIndexItem[];
+// File-based search fallback for development
+interface FileSearchIndex {
+  questions: Array<{
+    slug: string;
+    question: string;
+    shortAnswer: string;
+    content: string;
+    tags: string[];
+    searchTerms: string[];
+    difficulty: string;
+    pubDate: string;
+  }>;
   lastUpdated: string;
 }
 
-/**
- * Extract searchable terms from text content
- */
-function extractSearchTerms(text: string): string[] {
-  // Remove markdown syntax and normalize text
-  const cleanText = text
-    .replace(/[#*_`\[\]()]/g, ' ') // Remove markdown characters
-    .replace(/\s+/g, ' ') // Normalize whitespace
-    .trim()
-    .toLowerCase();
-  
-  // Split into words and filter out short words
-  const words = cleanText
-    .split(/\s+/)
-    .filter(word => word.length >= 2)
-    .filter(word => !/^\d+$/.test(word)); // Remove pure numbers
-  
-  // Remove duplicates
-  return [...new Set(words)];
-}
-
-/**
- * Build search index from content collections
- */
-export async function buildSearchIndex(): Promise<SearchIndex> {
+async function loadFileSearchIndex(): Promise<FileSearchIndex | null> {
   try {
-    const questions = await getCollection('qa');
-    
-    const indexItems: SearchIndexItem[] = await Promise.all(
-      questions.map(async (question: CollectionEntry<'qa'>) => {
-        // Get the rendered content
-        const { Content } = await question.render();
-        
-        // Extract text content (first 200 chars for search)
-        const contentText = question.body.substring(0, 200);
-        
-        // Generate search terms from question, short answer, and content
-        const allText = `${question.data.question} ${question.data.shortAnswer} ${contentText}`;
-        const searchTerms = extractSearchTerms(allText);
-        
-        return {
-          slug: question.slug,
-          question: question.data.question,
-          shortAnswer: question.data.shortAnswer,
-          content: contentText,
-          tags: question.data.tags,
-          searchTerms,
-          difficulty: question.data.difficulty,
-          pubDate: question.data.pubDate.toISOString(),
-        };
-      })
-    );
-    
-    return {
-      questions: indexItems,
-      lastUpdated: new Date().toISOString(),
-    };
-  } catch (error) {
-    console.error('Error building search index:', error);
-    throw error;
-  }
-}
-
-/**
- * Save search index to file
- */
-export async function saveSearchIndex(index: SearchIndex): Promise<void> {
-  try {
-    const dataDir = path.join(process.cwd(), 'data');
-    
-    // Ensure data directory exists
-    try {
-      await fs.access(dataDir);
-    } catch {
-      await fs.mkdir(dataDir, { recursive: true });
+    // In server-side context, read from file system
+    if (typeof window === 'undefined') {
+      const fs = await import('fs/promises');
+      const path = await import('path');
+      
+      const indexPath = path.join(process.cwd(), 'data', 'search-index.json');
+      const data = await fs.readFile(indexPath, 'utf-8');
+      return JSON.parse(data);
     }
     
-    const indexPath = path.join(dataDir, 'search-index.json');
-    await fs.writeFile(indexPath, JSON.stringify(index, null, 2), 'utf-8');
-    
-    console.log(`Search index saved with ${index.questions.length} questions`);
+    // In client-side context, fetch from public directory
+    const response = await fetch('/data/search-index.json');
+    if (!response.ok) return null;
+    return await response.json();
   } catch (error) {
-    console.error('Error saving search index:', error);
-    throw error;
+    console.warn('Failed to load search index:', error);
+    return null;
   }
 }
 
+function fileBasedSearch(index: FileSearchIndex, options: SearchOptions): SearchResult {
+  const {
+    query = '',
+    tags = [],
+    difficulty,
+    limit = 10,
+    offset = 0,
+    sortBy = 'relevance'
+  } = options;
+
+  let results = index.questions;
+
+  // Apply filters
+  if (query.trim()) {
+    const queryLower = query.toLowerCase();
+    results = results.filter(item => {
+      return (
+        item.question.toLowerCase().includes(queryLower) ||
+        item.shortAnswer.toLowerCase().includes(queryLower) ||
+        item.content.toLowerCase().includes(queryLower) ||
+        item.tags.some(tag => tag.toLowerCase().includes(queryLower)) ||
+        item.searchTerms.some(term => term.toLowerCase().includes(queryLower))
+      );
+    });
+  }
+
+  if (tags.length > 0) {
+    results = results.filter(item => 
+      tags.some(tag => item.tags.includes(tag))
+    );
+  }
+
+  if (difficulty) {
+    results = results.filter(item => item.difficulty === difficulty);
+  }
+
+  // Sort results
+  if (sortBy === 'date') {
+    results.sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime());
+  }
+
+  // Apply pagination
+  const total = results.length;
+  const paginatedResults = results.slice(offset, offset + limit);
+
+  // Convert to Question format
+  const questions: Question[] = paginatedResults.map(item => ({
+    id: 0,
+    slug: item.slug,
+    question: item.question,
+    shortAnswer: item.shortAnswer,
+    content: item.content,
+    tags: item.tags,
+    difficulty: item.difficulty as 'easy' | 'medium' | 'hard',
+    pubDate: new Date(item.pubDate),
+    updatedDate: undefined,
+    heroImage: undefined,
+    ratingSum: 0,
+    ratingCount: 0,
+    ratingAvg: 0,
+    createdAt: new Date(),
+    updatedAt: new Date()
+  }));
+
+  return {
+    questions,
+    total,
+    hasMore: offset + limit < total
+  };
+}
+
 /**
- * Load search index from file
+ * Universal search function that works in both development and production
  */
-export async function loadSearchIndex(): Promise<SearchIndex> {
-  try {
-    const indexPath = path.join(process.cwd(), 'data', 'search-index.json');
-    const data = await fs.readFile(indexPath, 'utf-8');
-    return JSON.parse(data);
-  } catch (error) {
-    console.error('Error loading search index:', error);
-    // Return empty index if file doesn't exist
+export async function searchQuestions(options: SearchOptions = {}): Promise<SearchResult> {
+  // Try database search first (production)
+  if (process.env.DATABASE_URL) {
+    try {
+      const { searchQuestions: dbSearch } = await import('./database');
+      return await dbSearch(options);
+    } catch (error) {
+      console.warn('Database search failed, falling back to file search:', error);
+    }
+  }
+
+  // Fallback to file-based search (development)
+  const index = await loadFileSearchIndex();
+  if (!index) {
     return {
       questions: [],
-      lastUpdated: new Date().toISOString(),
+      total: 0,
+      hasMore: false
     };
   }
+
+  return fileBasedSearch(index, options);
 }
 
 /**
- * Update search index (rebuild and save)
+ * Get question by slug - universal function
  */
-export async function updateSearchIndex(): Promise<void> {
-  try {
-    const index = await buildSearchIndex();
-    await saveSearchIndex(index);
-  } catch (error) {
-    console.error('Error updating search index:', error);
-    throw error;
+export async function getQuestionBySlug(slug: string): Promise<Question | null> {
+  // Try database first (production)
+  if (process.env.DATABASE_URL) {
+    try {
+      const { getQuestionBySlug: dbGet } = await import('./database');
+      return await dbGet(slug);
+    } catch (error) {
+      console.warn('Database get failed, falling back to file search:', error);
+    }
   }
+
+  // Fallback to file-based search (development)
+  const index = await loadFileSearchIndex();
+  if (!index) return null;
+
+  const item = index.questions.find(q => q.slug === slug);
+  if (!item) return null;
+
+  return {
+    id: 0,
+    slug: item.slug,
+    question: item.question,
+    shortAnswer: item.shortAnswer,
+    content: item.content,
+    tags: item.tags,
+    difficulty: item.difficulty as 'easy' | 'medium' | 'hard',
+    pubDate: new Date(item.pubDate),
+    updatedDate: undefined,
+    heroImage: undefined,
+    ratingSum: 0,
+    ratingCount: 0,
+    ratingAvg: 0,
+    createdAt: new Date(),
+    updatedAt: new Date()
+  };
+}
+
+/**
+ * Get popular tags - universal function
+ */
+export async function getPopularTags(limit: number = 20): Promise<Array<{tag: string, count: number}>> {
+  // Try database first (production)
+  if (process.env.DATABASE_URL) {
+    try {
+      const { getPopularTags: dbTags } = await import('./database');
+      return await dbTags(limit);
+    } catch (error) {
+      console.warn('Database tags failed, falling back to file search:', error);
+    }
+  }
+
+  // Fallback to file-based search (development)
+  const index = await loadFileSearchIndex();
+  if (!index) return [];
+
+  const tagCounts = new Map<string, number>();
+  
+  index.questions.forEach(question => {
+    question.tags.forEach(tag => {
+      tagCounts.set(tag, (tagCounts.get(tag) || 0) + 1);
+    });
+  });
+
+  return Array.from(tagCounts.entries())
+    .map(([tag, count]) => ({ tag, count }))
+    .sort((a, b) => b.count - a.count || a.tag.localeCompare(b.tag))
+    .slice(0, limit);
 }
