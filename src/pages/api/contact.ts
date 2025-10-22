@@ -6,6 +6,39 @@ import { Resend } from 'resend';
 // Admin email configuration
 const ADMIN_EMAIL = import.meta.env.ADMIN_EMAIL || process.env.ADMIN_EMAIL || 'admin@qa-site.com';
 const FROM_EMAIL = import.meta.env.FROM_EMAIL || process.env.FROM_EMAIL || 'noreply@qa-site.com';
+const RESEND_AUDIENCE_ID = import.meta.env.RESEND_AUDIENCE_ID || process.env.RESEND_AUDIENCE_ID;
+
+/**
+ * Add contact to Resend audience for future email marketing
+ */
+async function addToResendAudience(contactData: ContactFormData): Promise<void> {
+  const resendApiKey = import.meta.env.RESEND_API_KEY || process.env.RESEND_API_KEY;
+  
+  if (!resendApiKey || !RESEND_AUDIENCE_ID) {
+    console.info('Audience integration disabled (RESEND_API_KEY or RESEND_AUDIENCE_ID not configured).');
+    return;
+  }
+
+  const resend = new Resend(resendApiKey);
+
+  try {
+    const { data, error } = await resend.contacts.create({
+      email: contactData.email,
+      firstName: contactData.name,
+      audienceId: RESEND_AUDIENCE_ID,
+    });
+
+    if (error) {
+      console.error('Failed to add contact to Resend audience:', error);
+      // Don't throw error - we don't want to fail the contact form submission
+    } else {
+      console.log('Contact added to Resend audience successfully:', data?.id);
+    }
+  } catch (error) {
+    console.error('Error adding contact to Resend audience:', error);
+    // Don't throw error - we don't want to fail the contact form submission
+  }
+}
 
 /**
  * Send email notification to admin when a new contact message is received
@@ -178,6 +211,9 @@ export const POST: APIRoute = async ({ request }) => {
 
     // Save contact message to storage (KV or fallback)
     await saveContactMessage(contactData);
+
+    // Add contact to Resend audience for future email marketing
+    await addToResendAudience(contactData);
 
     // Send email notification to admin using Resend
     await sendAdminNotification(contactData);
