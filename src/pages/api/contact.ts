@@ -3,22 +3,28 @@ import { saveContactMessage, generateId } from '../../lib/dataStorage.js';
 import type { ContactFormData } from '../../lib/dataStorage.js';
 import { Resend } from 'resend';
 
-// Initialize Resend with API key from environment variables
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 // Admin email configuration
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@qa-site.com';
-const FROM_EMAIL = process.env.FROM_EMAIL || 'noreply@qa-site.com';
+const ADMIN_EMAIL = import.meta.env.ADMIN_EMAIL || process.env.ADMIN_EMAIL || 'admin@qa-site.com';
+const FROM_EMAIL = import.meta.env.FROM_EMAIL || process.env.FROM_EMAIL || 'noreply@qa-site.com';
 
 /**
  * Send email notification to admin when a new contact message is received
  */
 async function sendAdminNotification(contactData: ContactFormData): Promise<void> {
   // Skip email sending if Resend API key is not configured
-  if (!process.env.RESEND_API_KEY) {
+  const resendApiKey = import.meta.env.RESEND_API_KEY || process.env.RESEND_API_KEY;
+  console.log('Environment check - RESEND_API_KEY exists:', !!resendApiKey);
+  console.log('Environment check - RESEND_API_KEY length:', resendApiKey?.length || 0);
+  console.log('Environment check - import.meta.env exists:', !!import.meta.env.RESEND_API_KEY);
+  console.log('Environment check - process.env exists:', !!process.env.RESEND_API_KEY);
+  
+  if (!resendApiKey) {
     console.warn('RESEND_API_KEY not configured, skipping email notification');
     return;
   }
+
+  // Initialize Resend only when we need it and have the API key
+  const resend = new Resend(resendApiKey);
 
   try {
     const emailContent = `

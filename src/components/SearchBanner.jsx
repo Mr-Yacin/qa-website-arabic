@@ -187,20 +187,21 @@ export default function SearchBanner({
           onFocus={handleInputFocus}
           onBlur={handleInputBlur}
           placeholder={placeholder}
-          className="w-full px-4 py-3 pr-12 text-lg bg-white dark:bg-zinc-800 border-2 border-zinc-300 dark:border-zinc-600 rounded-lg focus:border-indigo-500 dark:focus:border-indigo-400 focus:outline-none transition-colors duration-200 text-zinc-900 dark:text-zinc-100 placeholder-zinc-500 dark:placeholder-zinc-400"
+          className="w-full px-4 py-3 pr-12 text-base sm:text-lg bg-white dark:bg-zinc-800 border-2 border-zinc-300 dark:border-zinc-600 rounded-lg focus:border-indigo-500 dark:focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-indigo-400 dark:focus:ring-offset-zinc-800 transition-all duration-200 text-zinc-900 dark:text-zinc-100 placeholder-zinc-500 dark:placeholder-zinc-400 touch-friendly mobile-optimized"
           aria-label="البحث في الأسئلة"
           aria-expanded={isOpen}
           aria-haspopup="listbox"
           aria-autocomplete="list"
+          aria-describedby={error ? "search-error" : "search-help"}
           role="combobox"
         />
         
-        {/* Search Icon */}
-        <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-zinc-400 dark:text-zinc-500">
+        {/* Search Icon - positioned on left for RTL */}
+        <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-zinc-400 dark:text-zinc-500 pointer-events-none" aria-hidden="true">
           {isLoading ? (
-            <div className="animate-spin w-5 h-5 border-2 border-indigo-500 border-t-transparent rounded-full"></div>
+            <div className="animate-spin w-4 h-4 sm:w-5 sm:h-5 border-2 border-indigo-500 border-t-transparent rounded-full" role="status" aria-label="جاري البحث"></div>
           ) : (
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           )}
@@ -209,54 +210,73 @@ export default function SearchBanner({
 
       {/* Suggestions Dropdown */}
       {isOpen && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto">
+        <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg shadow-lg z-50 max-h-80 sm:max-h-96 overflow-y-auto transition-all duration-200">
           {error ? (
-            <div className="p-4 text-red-600 dark:text-red-400 text-center">
+            <div id="search-error" className="p-4 text-red-600 dark:text-red-400 text-center" role="alert">
               {error}
             </div>
           ) : suggestions.length > 0 ? (
-            <ul ref={dropdownRef} role="listbox" className="py-2">
+            <ul ref={dropdownRef} role="listbox" className="py-2" aria-label="نتائج البحث">
               {suggestions.map((suggestion, index) => (
                 <li
                   key={suggestion.slug}
                   role="option"
                   aria-selected={index === selectedIndex}
-                  className={`px-4 py-3 cursor-pointer transition-colors duration-150 border-b border-zinc-100 dark:border-zinc-700 last:border-b-0 ${
+                  className={`px-3 sm:px-4 py-3 sm:py-4 cursor-pointer transition-all duration-150 border-b border-zinc-100 dark:border-zinc-700 last:border-b-0 touch-friendly focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-inset dark:focus:ring-indigo-400 ${
                     index === selectedIndex
-                      ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-900 dark:text-indigo-100'
+                      ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-900 dark:text-indigo-100 ring-2 ring-indigo-500 ring-inset dark:ring-indigo-400'
                       : 'hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-100'
                   }`}
                   onClick={() => handleSuggestionClick(suggestion)}
+                  tabIndex={-1}
                 >
-                  <div className="flex flex-col gap-1">
+                  <div className="flex flex-col gap-1 text-right">
                     {/* Question Title */}
                     <div 
-                      className="font-medium text-sm leading-tight"
+                      className="font-medium text-sm sm:text-base leading-tight mobile-optimized"
                       dangerouslySetInnerHTML={{ __html: suggestion.question }}
                     />
                     
                     {/* Short Answer */}
                     <div 
-                      className="text-xs text-zinc-600 dark:text-zinc-400 line-clamp-2"
+                      className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 line-clamp-2 mobile-optimized"
                       dangerouslySetInnerHTML={{ __html: suggestion.shortAnswer }}
                     />
                     
                     {/* Tags */}
                     {suggestion.tags && suggestion.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {suggestion.tags.slice(0, 3).map((tag) => (
-                          <span
-                            key={tag}
-                            className="px-2 py-1 text-xs bg-zinc-100 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-400 rounded"
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                        {suggestion.tags.length > 3 && (
-                          <span className="text-xs text-zinc-500 dark:text-zinc-500">
-                            +{suggestion.tags.length - 3}
-                          </span>
-                        )}
+                      <div className="flex flex-wrap gap-1 mt-1 justify-end">
+                        {/* Show 2 tags on mobile, 3 on larger screens */}
+                        <div className="flex flex-wrap gap-1 sm:hidden">
+                          {suggestion.tags.slice(0, 2).map((tag) => (
+                            <span
+                              key={tag}
+                              className="px-1.5 py-0.5 text-xs bg-zinc-100 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-400 rounded transition-colors duration-200"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                          {suggestion.tags.length > 2 && (
+                            <span className="text-xs text-zinc-500 dark:text-zinc-500">
+                              +{suggestion.tags.length - 2}
+                            </span>
+                          )}
+                        </div>
+                        <div className="hidden sm:flex flex-wrap gap-1">
+                          {suggestion.tags.slice(0, 3).map((tag) => (
+                            <span
+                              key={tag}
+                              className="px-2 py-1 text-xs bg-zinc-100 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-400 rounded transition-colors duration-200"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                          {suggestion.tags.length > 3 && (
+                            <span className="text-xs text-zinc-500 dark:text-zinc-500">
+                              +{suggestion.tags.length - 3}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     )}
                   </div>
@@ -268,7 +288,7 @@ export default function SearchBanner({
               <div className="mb-2">لا توجد نتائج لـ "{query}"</div>
               <button
                 onClick={() => window.location.href = `/search?q=${encodeURIComponent(query.trim())}`}
-                className="text-indigo-600 dark:text-indigo-400 hover:underline text-sm"
+                className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 hover:underline text-sm transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-indigo-400 dark:focus:ring-offset-zinc-800 rounded px-2 py-1 touch-friendly"
               >
                 البحث في جميع الأسئلة
               </button>
@@ -276,6 +296,11 @@ export default function SearchBanner({
           ) : null}
         </div>
       )}
+
+      {/* Screen reader help text */}
+      <div id="search-help" className="sr-only">
+        استخدم الأسهم للتنقل بين النتائج، واضغط Enter للاختيار، أو Escape للإغلاق
+      </div>
     </div>
   );
 }

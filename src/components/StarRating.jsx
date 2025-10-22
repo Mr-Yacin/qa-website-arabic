@@ -155,10 +155,10 @@ export default function StarRating({ slug, initialData }) {
         key={starValue}
         type="button"
         className={`
-          text-2xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-indigo-400 dark:focus:ring-offset-zinc-900 rounded will-change-transform
-          ${isDisabled ? 'cursor-default opacity-50' : 'cursor-pointer hover:scale-110 transform'}
+          text-xl sm:text-2xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-indigo-400 dark:focus:ring-offset-zinc-900 rounded will-change-transform touch-friendly p-1 sm:p-2
+          ${isDisabled ? 'cursor-default opacity-50' : 'cursor-pointer hover:scale-110 transform active:scale-95'}
           ${isFilled ? 'text-yellow-400 dark:text-yellow-300' : 'text-zinc-300 dark:text-zinc-600'}
-          ${hasRated && starValue === rating ? 'drop-shadow-lg' : ''}
+          ${hasRated && starValue === rating ? 'drop-shadow-lg ring-2 ring-yellow-400 ring-opacity-50' : ''}
         `}
         onClick={() => !isDisabled && handleRatingSubmit(starValue)}
         onMouseEnter={() => !isDisabled && setHoveredRating(starValue)}
@@ -174,47 +174,54 @@ export default function StarRating({ slug, initialData }) {
   };
 
   return (
-    <div className="flex flex-col items-center gap-3 p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-700 transition-colors duration-200 min-h-[140px] w-full max-w-md">
-      <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100 transition-colors duration-200">
+    <div className="flex flex-col items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-700 shadow-sm hover:shadow-md transition-all duration-200 min-h-[120px] sm:min-h-[140px] w-full max-w-md">
+      <h3 className="text-base sm:text-lg font-semibold text-zinc-900 dark:text-zinc-100 transition-colors duration-200 text-center">
         قيم هذا السؤال
       </h3>
       
       <div 
-        className="flex gap-1"
+        className="flex gap-1 justify-center"
         role="radiogroup"
         aria-label="تقييم السؤال من 1 إلى 5 نجوم"
+        aria-describedby="rating-instructions"
       >
-        {[1, 2, 3, 4, 5].map(renderStar)}
+        {[5, 4, 3, 2, 1].map(renderStar)}
       </div>
 
       {/* Display average rating and vote count */}
       {averageRating !== null && voteCount > 0 && (
-        <div className="text-sm text-zinc-600 dark:text-zinc-400 text-center transition-colors duration-200">
-          <span>متوسط التقييم: {averageRating.toFixed(1)} من 5</span>
-          <span className="mx-2">•</span>
-          <span>({voteCount} {voteCount === 1 ? 'تقييم' : 'تقييمات'})</span>
+        <div className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 text-center transition-colors duration-200 px-2">
+          <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2">
+            <span>متوسط التقييم: {averageRating.toFixed(1)} من 5</span>
+            <span className="hidden sm:inline">•</span>
+            <span>({voteCount} {voteCount === 1 ? 'تقييم' : 'تقييمات'})</span>
+          </div>
         </div>
       )}
 
       {/* User feedback messages */}
       {hasRated && !isSubmitting && (
-        <p className="text-sm text-green-600 dark:text-green-400 text-center transition-colors duration-200">
+        <p className="text-xs sm:text-sm text-green-600 dark:text-green-400 text-center transition-colors duration-200 px-2">
           {isUpdating ? 
             `تم تحديث تقييمك إلى ${rating} ${rating === 1 ? 'نجمة' : 'نجوم'}` :
-            `تقييمك: ${rating} ${rating === 1 ? 'نجمة' : 'نجوم'} - يمكنك تغييره بالضغط على نجمة أخرى`
+            <>
+              <span className="block sm:inline">{`تقييمك: ${rating} ${rating === 1 ? 'نجمة' : 'نجوم'}`}</span>
+              <span className="block sm:inline sm:before:content-['-'] sm:before:mx-2">يمكنك تغييره بالضغط على نجمة أخرى</span>
+            </>
           }
         </p>
       )}
 
       {isSubmitting && (
-        <p className="text-sm text-indigo-600 dark:text-indigo-400 text-center transition-colors duration-200">
+        <p className="text-xs sm:text-sm text-indigo-600 dark:text-indigo-400 text-center transition-colors duration-200">
           {isUpdating ? 'جاري تحديث التقييم...' : 'جاري الحفظ...'}
         </p>
       )}
 
       {!hasRated && !isSubmitting && (
-        <p className="text-sm text-zinc-500 dark:text-zinc-500 text-center transition-colors duration-200">
-          اضغط على النجوم لإعطاء تقييم
+        <p id="rating-instructions" className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-500 text-center transition-colors duration-200 px-2">
+          <span className="block sm:inline">اضغط على النجوم لإعطاء تقييم</span>
+          <span className="hidden sm:block sm:inline sm:before:content-[','] sm:before:mx-1">أو استخدم مفاتيح الأسهم والمسافة</span>
         </p>
       )}
     </div>

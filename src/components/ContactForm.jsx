@@ -132,13 +132,13 @@ export default function ContactForm() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-6 bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-700 transition-colors duration-200">
-      <form onSubmit={handleSubmit} className="space-y-6" noValidate>
+    <div className="max-w-2xl mx-auto p-4 sm:p-6 bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-700 shadow-sm hover:shadow-md transition-all duration-200">
+      <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6" noValidate role="form" aria-label="نموذج التواصل">
         {/* Name Field */}
         <div>
           <label 
             htmlFor="name" 
-            className="block text-sm font-medium text-zinc-900 dark:text-zinc-100 mb-2 transition-colors duration-200"
+            className="block text-sm sm:text-base font-medium text-zinc-900 dark:text-zinc-100 mb-2 transition-colors duration-200"
           >
             الاسم <span className="text-red-500">*</span>
           </label>
@@ -150,12 +150,12 @@ export default function ContactForm() {
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
             className={`
-              w-full px-4 py-3 rounded-lg border transition-all duration-200 
+              w-full px-3 sm:px-4 py-3 sm:py-4 rounded-lg border transition-all duration-200 touch-friendly mobile-optimized
               bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100
-              focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400
+              focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-zinc-900
               ${errors.name 
                 ? 'border-red-500 dark:border-red-400 focus:ring-red-500 dark:focus:ring-red-400' 
-                : 'border-zinc-300 dark:border-zinc-600 hover:border-zinc-400 dark:hover:border-zinc-500'
+                : 'border-zinc-300 dark:border-zinc-600 hover:border-zinc-400 dark:hover:border-zinc-500 focus:ring-indigo-500 dark:focus:ring-indigo-400'
               }
             `}
             placeholder="أدخل اسمك الكامل"
@@ -174,7 +174,7 @@ export default function ContactForm() {
         <div>
           <label 
             htmlFor="email" 
-            className="block text-sm font-medium text-zinc-900 dark:text-zinc-100 mb-2 transition-colors duration-200"
+            className="block text-sm sm:text-base font-medium text-zinc-900 dark:text-zinc-100 mb-2 transition-colors duration-200"
           >
             البريد الإلكتروني <span className="text-red-500">*</span>
           </label>
@@ -186,12 +186,12 @@ export default function ContactForm() {
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
             className={`
-              w-full px-4 py-3 rounded-lg border transition-all duration-200 
+              w-full px-3 sm:px-4 py-3 sm:py-4 rounded-lg border transition-all duration-200 touch-friendly mobile-optimized
               bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100
-              focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400
+              focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-zinc-900
               ${errors.email 
                 ? 'border-red-500 dark:border-red-400 focus:ring-red-500 dark:focus:ring-red-400' 
-                : 'border-zinc-300 dark:border-zinc-600 hover:border-zinc-400 dark:hover:border-zinc-500'
+                : 'border-zinc-300 dark:border-zinc-600 hover:border-zinc-400 dark:hover:border-zinc-500 focus:ring-indigo-500 dark:focus:ring-indigo-400'
               }
             `}
             placeholder="example@domain.com"
@@ -210,7 +210,7 @@ export default function ContactForm() {
         <div>
           <label 
             htmlFor="subject" 
-            className="block text-sm font-medium text-zinc-900 dark:text-zinc-100 mb-2 transition-colors duration-200"
+            className="block text-sm sm:text-base font-medium text-zinc-900 dark:text-zinc-100 mb-2 transition-colors duration-200"
           >
             الموضوع <span className="text-red-500">*</span>
           </label>
@@ -222,12 +222,12 @@ export default function ContactForm() {
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
             className={`
-              w-full px-4 py-3 rounded-lg border transition-all duration-200 
+              w-full px-3 sm:px-4 py-3 sm:py-4 rounded-lg border transition-all duration-200 touch-friendly mobile-optimized
               bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100
-              focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400
+              focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-zinc-900
               ${errors.subject 
                 ? 'border-red-500 dark:border-red-400 focus:ring-red-500 dark:focus:ring-red-400' 
-                : 'border-zinc-300 dark:border-zinc-600 hover:border-zinc-400 dark:hover:border-zinc-500'
+                : 'border-zinc-300 dark:border-zinc-600 hover:border-zinc-400 dark:hover:border-zinc-500 focus:ring-indigo-500 dark:focus:ring-indigo-400'
               }
             `}
             placeholder="موضوع رسالتك"
@@ -246,23 +246,23 @@ export default function ContactForm() {
         <div>
           <label 
             htmlFor="message" 
-            className="block text-sm font-medium text-zinc-900 dark:text-zinc-100 mb-2 transition-colors duration-200"
+            className="block text-sm sm:text-base font-medium text-zinc-900 dark:text-zinc-100 mb-2 transition-colors duration-200"
           >
             الرسالة <span className="text-red-500">*</span>
           </label>
           <textarea
             id="message"
             name="message"
-            rows={6}
+            rows={4}
             value={formData.message}
             onChange={handleInputChange}
             className={`
-              w-full px-4 py-3 rounded-lg border transition-all duration-200 resize-vertical
+              w-full px-3 sm:px-4 py-3 sm:py-4 rounded-lg border transition-all duration-200 resize-vertical touch-friendly mobile-optimized sm:min-h-[120px]
               bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100
-              focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400
+              focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-zinc-900
               ${errors.message 
                 ? 'border-red-500 dark:border-red-400 focus:ring-red-500 dark:focus:ring-red-400' 
-                : 'border-zinc-300 dark:border-zinc-600 hover:border-zinc-400 dark:hover:border-zinc-500'
+                : 'border-zinc-300 dark:border-zinc-600 hover:border-zinc-400 dark:hover:border-zinc-500 focus:ring-indigo-500 dark:focus:ring-indigo-400'
               }
             `}
             placeholder="اكتب رسالتك هنا..."
@@ -283,11 +283,11 @@ export default function ContactForm() {
             type="submit"
             disabled={isSubmitting}
             className={`
-              w-full px-6 py-3 rounded-lg font-medium transition-all duration-200
+              w-full px-4 sm:px-6 py-3 sm:py-4 rounded-lg font-medium transition-all duration-200 touch-friendly text-base sm:text-lg
               focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 dark:focus:ring-offset-zinc-900
               ${isSubmitting
                 ? 'bg-zinc-400 dark:bg-zinc-600 text-zinc-700 dark:text-zinc-300 cursor-not-allowed'
-                : 'bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white hover:shadow-lg transform hover:scale-[1.02]'
+                : 'bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98]'
               }
             `}
           >
@@ -332,9 +332,9 @@ export default function ContactForm() {
         )}
 
         {/* Help Text */}
-        <div className="text-sm text-zinc-600 dark:text-zinc-400 text-center">
+        <div className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 text-center space-y-1">
           <p>جميع الحقول المطلوبة مُشار إليها بـ <span className="text-red-500">*</span></p>
-          <p className="mt-1">يمكنك استخدام Ctrl+Enter لإرسال النموذج</p>
+          <p className="hidden sm:block">يمكنك استخدام Ctrl+Enter لإرسال النموذج</p>
         </div>
       </form>
     </div>
