@@ -2,76 +2,75 @@
 
 ## Introduction
 
-This document outlines the requirements for enhancing the existing Arabic Q&A website with improved API functionality, contact form, enhanced rating system, and intelligent search capabilities. These enhancements will improve user experience and site functionality while maintaining the existing RTL design and performance standards.
+This document outlines the requirements for fixing critical data model drift issues in the Arabic Q&A website and implementing a unified database-first architecture. The primary focus is resolving competing storage approaches between file-based and database systems to ensure scalable search functionality and consistent ratings management.
 
 ## Glossary
 
-- **Search System**: The intelligent search functionality with autocomplete and question suggestions
-- **Rating API**: Backend endpoints for managing question ratings with persistence
-- **Contact Form**: User communication interface for feedback and inquiries
-- **Autocomplete**: Real-time search suggestions based on user input
-- **Rating Persistence**: Ability to update and modify previously submitted ratings
+- **Questions Table**: Unified database table storing all question data with search vectors and rating aggregates
+- **Search Vector**: PostgreSQL tsvector field enabling full-text search with ranking
+- **Rating Aggregates**: Computed rating statistics (sum, count, average) stored in the questions table
+- **Ratings Table**: Normalized table storing individual user ratings with proper foreign key relationships
+- **Database Schema**: Unified data structure replacing conflicting file-based and JSONB approaches
+- **Search Index**: Database-backed search functionality using PostgreSQL full-text search capabilities
 
 ## Requirements
 
-### Requirement 1: API Functionality and Rating System Enhancement
+### Requirement 1: Unified Database Schema Implementation
 
-**User Story:** As a user, I want a reliable rating system where I can change my ratings and see accurate averages, so that I can provide updated feedback on questions.
-
-#### Acceptance Criteria
-
-1. WHEN the rating API is tested, THE System SHALL validate that POST /api/rate endpoint accepts and processes ratings correctly
-2. WHEN a user submits a rating, THE System SHALL store the rating persistently with user identification
-3. WHEN a user has previously rated a question, THE System SHALL allow them to update their existing rating
-4. WHEN average ratings are requested, THE System SHALL calculate and return accurate averages from stored data
-5. WHEN rating data is persisted, THE System SHALL use a proper storage mechanism instead of localStorage only
-
-### Requirement 2: Contact Form Implementation
-
-**User Story:** As a visitor, I want to contact the site administrators through a contact form, so that I can provide feedback, ask questions, or report issues.
+**User Story:** As a system administrator, I want a single, consistent database schema for questions and ratings, so that the system can scale efficiently without data model conflicts.
 
 #### Acceptance Criteria
 
-1. WHEN the contact form is displayed, THE System SHALL provide fields for name, email, subject, and message
-2. WHEN form data is submitted, THE System SHALL validate all required fields and email format
-3. WHEN contact form is submitted successfully, THE System SHALL send the message via email or store it for admin review
-4. WHEN form validation fails, THE System SHALL display clear error messages in Arabic
-5. WHEN form is submitted successfully, THE System SHALL show a confirmation message to the user
+1. WHEN the database schema is created, THE System SHALL implement a unified questions table with search vectors and rating aggregates
+2. WHEN questions are stored, THE System SHALL use row-per-question structure instead of JSONB arrays for optimal query performance
+3. WHEN search vectors are generated, THE System SHALL use PostgreSQL tsvector with proper indexing for full-text search
+4. WHEN rating aggregates are calculated, THE System SHALL store sum, count, and computed average in the questions table
+5. WHEN the schema is deployed, THE System SHALL replace conflicting search_index JSONB approach with proper relational structure
 
-### Requirement 3: Intelligent Search System
+### Requirement 2: Normalized Ratings System
 
-**User Story:** As a user, I want to search for questions with autocomplete suggestions, so that I can quickly find relevant content without typing complete queries.
-
-#### Acceptance Criteria
-
-1. WHEN search banner is displayed, THE System SHALL show a prominent search input in the header or hero section
-2. WHEN user types in search input, THE System SHALL provide real-time autocomplete suggestions based on question titles
-3. WHEN search suggestions are shown, THE System SHALL limit results to maximum 5 most relevant matches
-4. WHEN user selects a suggestion, THE System SHALL navigate directly to the selected question
-5. WHEN user submits search query, THE System SHALL display filtered results matching the search term
-6. WHEN search is performed, THE System SHALL search through question titles, short answers, and content
-7. WHEN no results are found, THE System SHALL display a helpful "no results" message with suggestions
-
-### Requirement 4: Search Integration and User Experience
-
-**User Story:** As a user, I want the search functionality to be easily accessible and provide intelligent suggestions, so that I can discover content efficiently.
+**User Story:** As a user, I want my ratings to be stored consistently and allow updates, so that I can modify my feedback and see accurate aggregated ratings.
 
 #### Acceptance Criteria
 
-1. WHEN search banner is positioned, THE System SHALL place it prominently in the site header or homepage hero section
-2. WHEN search input is focused, THE System SHALL show a dropdown with recent popular questions as suggestions
-3. WHEN search autocomplete is displayed, THE System SHALL highlight matching text in suggestions
-4. WHEN search is mobile-responsive, THE System SHALL adapt the search interface for touch devices
-5. WHEN search results are displayed, THE System SHALL maintain the existing card-based layout for consistency
+1. WHEN ratings are submitted, THE System SHALL store individual ratings in a normalized ratings table with proper foreign keys
+2. WHEN a user updates a rating, THE System SHALL use UPSERT operations to replace existing ratings for the same user and question
+3. WHEN rating aggregates are updated, THE System SHALL recalculate sums and counts in the questions table within database transactions
+4. WHEN ratings are retrieved, THE System SHALL return both individual user ratings and computed aggregates from the database
+5. WHEN rating data is accessed, THE System SHALL eliminate JSONB rating maps in favor of normalized table queries
 
-### Requirement 5: Enhanced User Interface and Accessibility
+### Requirement 3: Database-First Search Implementation
 
-**User Story:** As a user, I want the new features to integrate seamlessly with the existing design and maintain accessibility standards, so that the site remains consistent and usable.
+**User Story:** As a user, I want fast and accurate search results, so that I can quickly find relevant questions using database-optimized search capabilities.
 
 #### Acceptance Criteria
 
-1. WHEN new components are added, THE System SHALL maintain RTL layout and Arabic language support
-2. WHEN contact form is displayed, THE System SHALL follow the existing design system and color scheme
-3. WHEN search functionality is used, THE System SHALL provide proper keyboard navigation and ARIA labels
-4. WHEN rating system is enhanced, THE System SHALL maintain the existing visual design while adding update functionality
-5. WHEN new features are implemented, THE System SHALL ensure they work properly in dark mode
+1. WHEN search queries are processed, THE System SHALL use PostgreSQL full-text search with ts_rank scoring instead of file-based indexing
+2. WHEN search vectors are maintained, THE System SHALL automatically update tsvector fields when question content changes
+3. WHEN search results are ranked, THE System SHALL use database ranking algorithms with proper relevance scoring
+4. WHEN search performance is optimized, THE System SHALL use GIN indexes on search vectors for fast query execution
+5. WHEN search fallbacks are needed, THE System SHALL use ILIKE queries for short terms while preferring full-text search
+
+### Requirement 4: Content Synchronization and Indexing
+
+**User Story:** As a content manager, I want markdown content to be automatically synchronized with the database, so that search and ratings work with the latest content without manual intervention.
+
+#### Acceptance Criteria
+
+1. WHEN markdown content is updated, THE System SHALL provide an API endpoint to reindex content from markdown files to the database
+2. WHEN questions are indexed, THE System SHALL extract and store searchable content in the questions table with proper search vector generation
+3. WHEN content synchronization occurs, THE System SHALL use UPSERT operations to handle both new and updated questions
+4. WHEN indexing is triggered, THE System SHALL be callable via deployment hooks or manual API calls for content updates
+5. WHEN search vectors are updated, THE System SHALL regenerate tsvector fields from question, short_answer, and content fields
+
+### Requirement 5: API Endpoint Unification
+
+**User Story:** As a developer, I want all API endpoints to use the unified database schema, so that there are no inconsistencies between different data access patterns.
+
+#### Acceptance Criteria
+
+1. WHEN rating APIs are called, THE System SHALL read and write exclusively to the normalized database tables
+2. WHEN search APIs are invoked, THE System SHALL query the questions table with proper full-text search instead of file-based indexes
+3. WHEN average ratings are requested, THE System SHALL return computed aggregates from the questions table
+4. WHEN API responses are generated, THE System SHALL eliminate file-based storage fallbacks in production environments
+5. WHEN database connections fail, THE System SHALL provide proper error handling without falling back to inconsistent data sources

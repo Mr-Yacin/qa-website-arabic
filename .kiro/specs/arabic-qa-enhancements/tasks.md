@@ -1,183 +1,109 @@
 # Implementation Plan
 
-- [x] 1. Set up data storage infrastructure
-
-
-
-
-
-  - Create data directory structure for ratings, contacts, and search index
-  - Implement utility functions for reading and writing JSON data files
-  - Add error handling and file system operations for data persistence
-  - _Requirements: 1.2, 1.5_
-
-- [x] 2. Enhance rating API endpoints
-
-
-
-
-
-  - [x] 2.1 Update POST /api/rate endpoint to support rating updates
-
-
-    - Modify existing rating API to load and update persistent rating data
-    - Implement user identification system using hashed IP + User-Agent
-    - Add logic to calculate and store average ratings and vote counts
-    - _Requirements: 1.1, 1.2, 1.3_
-
-  - [x] 2.2 Enhance GET /api/avg endpoint with real data
-
-
-    - Update average rating endpoint to return actual stored data
-    - Add user's current rating to the response if available
-    - Implement proper caching headers for rating data
-    - _Requirements: 1.4, 1.5_
-
-- [x] 3. Create enhanced StarRating component
-
-
-
-
-
-  - [x] 3.1 Update StarRating.jsx to support rating updates
-
-
-    - Add functionality to load existing user rating on component mount
-    - Implement visual feedback for rating updates vs new ratings
-    - Add display of current average rating and vote count
-    - _Requirements: 1.3, 1.4_
-
-
-
-  - [x] 3.2 Integrate enhanced rating component in question pages
-
-
-
-
-
-    - Update question detail pages to pass initial rating data
-    - Ensure proper hydration with user's existing rating
-    - Test rating update functionality and visual feedback
-    - _Requirements: 1.3, 1.4_
-
-- [x] 4. Implement search functionality
-
-
-
-
-
-  - [x] 4.1 Create search index generation
-
-
-    - Build search index from existing content collections
-    - Extract searchable terms from question titles, short answers, and content
-    - Implement search index update mechanism for new content
-    - _Requirements: 3.6_
-
-  - [x] 4.2 Create search API endpoint
-
-
-    - Implement GET /api/search endpoint with query parameter support
-    - Add fuzzy search logic for question titles and content
-    - Return formatted search suggestions with highlighting data
-    - _Requirements: 3.2, 3.3, 3.6_
-
-  - [x] 4.3 Build SearchBanner component
-
-
-    - Create React component with autocomplete dropdown functionality
-    - Implement debounced search requests and keyboard navigation
-    - Add click-to-select and mobile-responsive design
-    - _Requirements: 3.1, 3.2, 3.4, 4.4_
-
-- [x] 5. Integrate search banner in site layout
-
-
-
-
-
-  - [x] 5.1 Add search banner to site header
-
-
-    - Integrate SearchBanner component in Navbar.astro
-    - Ensure proper RTL layout and responsive design
-    - Add proper ARIA labels and accessibility features
-    - _Requirements: 4.1, 4.3, 5.3_
-
-  - [x] 5.2 Create search results page
-
-
-    - Build dedicated search results page for full search functionality
-    - Display filtered questions using existing CardQuestion components
-    - Add "no results" state with helpful suggestions
-    - _Requirements: 3.5, 3.7, 4.5_
-
-- [x] 6. Implement contact form functionality
-
-
-
-
-  - [x] 6.1 Create contact form API endpoint
-
-
-    - Build POST /api/contact endpoint with validation
-    - Implement form data validation and Arabic error messages
-    - Add contact message storage to JSON file system
-    - _Requirements: 2.2, 2.3, 2.4_
-
-  - [x] 6.2 Build ContactForm component
-
-
-    - Create React component with form fields and validation
-    - Implement client-side validation with Arabic error messages
-    - Add success/error state management and user feedback
-    - _Requirements: 2.1, 2.2, 2.4, 2.5_
-
-  - [x] 6.3 Create contact page
-
-
-    - Build dedicated contact page with ContactForm component
-    - Integrate with existing site layout and design system
-    - Add proper SEO meta tags and page structure
-    - _Requirements: 2.1, 5.2_
-
-- [x] 7. Enhance user interface and accessibility
-
-
-
-
-
-  - [x] 7.1 Update existing components for new features
-
-
-    - Ensure all new components follow RTL layout patterns
-    - Apply consistent dark mode styling to new components
-    - Verify keyboard navigation works for all interactive elements
-    - _Requirements: 5.1, 5.2, 5.3_
-
-  - [x] 7.2 Add mobile responsiveness for new features
-
-
-    - Optimize search banner for mobile devices
-    - Ensure contact form works properly on touch devices
-    - Test enhanced rating component on mobile screens
-    - _Requirements: 4.4, 5.4_
-
-- [ ] 8. Testing and validation
-  - [ ] 8.1 Test API endpoints functionality
-    - Verify rating API accepts updates and calculates averages correctly
-    - Test search API returns relevant suggestions with proper formatting
-    - Validate contact form API handles all validation cases
-    - _Requirements: 1.1, 1.4, 2.3, 3.2_
-
-  - [ ] 8.2 Test component integration
-    - Verify enhanced StarRating component loads and updates ratings
-    - Test SearchBanner autocomplete and navigation functionality
-    - Validate ContactForm submission and error handling
-    - _Requirements: 1.3, 3.2, 2.4_
-
-  - [ ] 8.3 Validate accessibility and performance
-    - Test keyboard navigation for all new interactive elements
-    - Verify screen reader compatibility with ARIA labels
-    - Check that new features maintain existing performance standards
-    - _Requirements: 5.3, 5.4_
+- [ ] 1. Create unified database schema
+  - [ ] 1.1 Update database setup script with unified schema
+    - Extend scripts/setup-neon-db.mjs with questions table including search vectors and rating aggregates
+    - Add ratings table with proper foreign key constraints (CASCADE DELETE) and indexes
+    - Create all necessary indexes including GIN index for search vectors
+    - Add automatic search vector update trigger to eliminate manual tsvector updates
+    - _Requirements: 1.1, 1.3_
+
+  - [ ] 1.2 Implement database migration utilities
+    - Create migration script to handle existing data if any
+    - Add database connection utilities and error handling
+    - Implement proper connection pooling and environment configuration
+    - _Requirements: 1.1, 1.4_
+
+- [ ] 2. Implement content synchronization system
+  - [ ] 2.1 Create content reindexing API endpoint
+    - Build POST /api/reindex endpoint with token-based authentication
+    - Implement markdown to database synchronization logic
+    - Add automatic search vector generation during content upsert
+    - _Requirements: 4.1, 4.2, 4.3_
+
+  - [ ] 2.2 Build content synchronization utilities
+    - Create utility functions to extract content from Astro content collections
+    - Implement UPSERT operations for questions with conflict resolution
+    - Add batch processing for efficient content synchronization
+    - _Requirements: 4.1, 4.3_
+
+- [ ] 3. Implement database-first rating system
+  - [ ] 3.1 Refactor rating API to use normalized database tables
+    - Update POST /api/rate to use UPSERT operations on ratings table
+    - Implement atomic transactions for rating updates and aggregate recalculation
+    - Add privacy-friendly user identification using hashed IP + User-Agent
+    - _Requirements: 2.1, 2.2, 2.3_
+
+  - [ ] 3.2 Update rating average API with database queries
+    - Refactor GET /api/avg to read from questions table aggregates
+    - Add user's current rating to response by querying ratings table
+    - Implement proper caching headers and error handling
+    - _Requirements: 2.4, 2.5_
+
+- [ ] 4. Implement PostgreSQL full-text search
+  - [ ] 4.1 Create database-backed search API with pagination
+    - Build GET /api/search using PostgreSQL tsvector and ts_rank
+    - Implement fallback ILIKE queries for short search terms
+    - Add pagination support with page, limit, and total count parameters
+    - Add proper result ranking and relevance scoring
+    - _Requirements: 3.1, 3.2, 3.3_
+
+  - [ ] 4.2 Update search functionality to use database
+    - Modify existing search components to call database-backed API
+    - Remove file-based search index dependencies
+    - Ensure search results maintain existing UI patterns
+    - _Requirements: 3.4, 3.5_
+
+- [ ] 5. Update existing components for database integration
+  - [ ] 5.1 Update StarRating component for database-backed ratings
+    - Modify StarRating.jsx to work with new API response format
+    - Ensure component properly handles database-sourced rating data
+    - Test rating updates and visual feedback with database backend
+    - _Requirements: 2.3, 2.4_
+
+  - [ ] 5.2 Update question pages with database-sourced data
+    - Modify question detail pages to use database aggregates
+    - Ensure proper hydration with user ratings from database
+    - Test integration between components and database APIs
+    - _Requirements: 2.4, 2.5_
+
+- [ ] 6. Remove conflicting file-based storage systems
+  - [ ] 6.1 Eliminate file-based rating storage
+    - Remove or deprecate existing JSON file-based rating system
+    - Update any remaining file-based rating utilities
+    - Ensure all rating operations use database exclusively
+    - _Requirements: 2.1, 2.5_
+
+  - [ ] 6.2 Remove conflicting search index files
+    - Eliminate search_index JSONB approach and related files
+    - Remove file-based search utilities that conflict with database approach
+    - Clean up any remaining file-based search dependencies
+    - _Requirements: 3.1, 3.5_
+
+- [ ] 7. Setup CI/CD integration and testing
+  - [ ] 7.1 Create GitHub Action for automatic content sync
+    - Add workflow to trigger /api/reindex on markdown content changes
+    - Configure secrets for SITE_URL and REINDEX_TOKEN
+    - Test automated sync when content is pushed to main branch
+    - _Requirements: 4.1, 4.4_
+
+  - [ ] 7.2 Test database schema and operations
+    - Verify questions table creation with proper constraints and indexes
+    - Test rating UPSERT operations and aggregate calculations
+    - Validate automatic search vector generation via database triggers
+    - Test foreign key constraints and CASCADE DELETE behavior
+    - _Requirements: 1.1, 2.1, 3.1_
+
+  - [ ] 7.3 Test API endpoints with database backend
+    - Verify rating API works correctly with normalized database tables
+    - Test search API returns properly ranked results with pagination
+    - Validate content reindexing API synchronizes markdown to database
+    - Test search performance with GIN indexes under load
+    - _Requirements: 2.2, 3.2, 4.1_
+
+  - [ ] 7.4 Validate data model consistency
+    - Ensure no conflicts between database and file-based approaches
+    - Test that all components use unified database schema
+    - Verify search and ratings work consistently across the application
+    - Test concurrent rating submissions and aggregate consistency
+    - _Requirements: 1.5, 2.5, 3.5_
