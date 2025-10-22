@@ -32,6 +32,8 @@ export interface SearchQuestion {
   content: string;
   tags: string[];
   searchTerms: string[];
+  difficulty?: string;
+  pubDate?: string;
 }
 
 export interface SearchIndex {

@@ -10,7 +10,9 @@
     "format": "prettier --write .",
     "astro": "astro",
     "setup-db": "node scripts/setup-neon-db.mjs",
-    "migrate-to-neon": "node scripts/migrate-kv-to-neon.mjs"
+    "migrate-to-neon": "node scripts/migrate-kv-to-neon.mjs",
+    "migrate-search": "node scripts/migrate-search-to-neon.mjs",
+    "test-vercel": "node scripts/test-vercel-ready.mjs"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.4",

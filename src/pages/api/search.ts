@@ -1,22 +1,6 @@
 import type { APIRoute } from 'astro';
-import fs from 'fs/promises';
-import path from 'path';
-
-interface SearchIndexItem {
-  slug: string;
-  question: string;
-  shortAnswer: string;
-  content: string;
-  tags: string[];
-  searchTerms: string[];
-  difficulty: string;
-  pubDate: string;
-}
-
-interface SearchIndex {
-  questions: SearchIndexItem[];
-  lastUpdated: string;
-}
+import { loadSearchIndex as loadSearchIndexFromStorage } from '../../lib/dataStorage.js';
+import type { SearchQuestion } from '../../lib/dataStorage.js';
 
 interface SearchSuggestion {
   slug: string;
@@ -28,16 +12,18 @@ interface SearchSuggestion {
 }
 
 /**
- * Load search index from file
+ * Load search index from database or fallback storage
  */
-async function loadSearchIndex(): Promise<SearchIndex> {
+async function loadSearchIndex(): Promise<{ questions: SearchQuestion[]; lastUpdated: string }> {
   try {
-    const indexPath = path.join(process.cwd(), 'data', 'search-index.json');
-    const data = await fs.readFile(indexPath, 'utf-8');
-    return JSON.parse(data);
+    const searchIndex = await loadSearchIndexFromStorage();
+    return {
+      questions: searchIndex.questions,
+      lastUpdated: searchIndex.lastUpdated?.toISOString() || new Date().toISOString(),
+    };
   } catch (error) {
-    console.error('Error loading search index:', error);
-    // Return empty index if file doesn't exist
+    console.error('Error loading search index from storage:', error);
+    // Return empty index if loading fails
     return {
       questions: [],
       lastUpdated: new Date().toISOString(),
@@ -50,7 +36,7 @@ async function loadSearchIndex(): Promise<SearchIndex> {
  */
 function calculateRelevanceScore(
   query: string,
-  item: SearchIndexItem,
+  item: SearchQuestion,
   matchType: string
 ): number {
   const queryLower = query.toLowerCase();
@@ -82,13 +68,15 @@ function calculateRelevanceScore(
     score += 10;
   }
   
-  // Boost for recent content
-  const pubDate = new Date(item.pubDate);
-  const daysSincePublished = (Date.now() - pubDate.getTime()) / (1000 * 60 * 60 * 24);
-  if (daysSincePublished < 30) {
-    score += 20;
-  } else if (daysSincePublished < 90) {
-    score += 10;
+  // Boost for recent content (if pubDate exists)
+  if (item.pubDate) {
+    const pubDate = new Date(item.pubDate);
+    const daysSincePublished = (Date.now() - pubDate.getTime()) / (1000 * 60 * 60 * 24);
+    if (daysSincePublished < 30) {
+      score += 20;
+    } else if (daysSincePublished < 90) {
+      score += 10;
+    }
   }
   
   return score;
@@ -97,7 +85,7 @@ function calculateRelevanceScore(
 /**
  * Perform fuzzy search on questions
  */
-function searchQuestions(query: string, questions: SearchIndexItem[]): SearchSuggestion[] {
+function searchQuestions(query: string, questions: SearchQuestion[]): SearchSuggestion[] {
   if (!query || query.length < 2) {
     return [];
   }
