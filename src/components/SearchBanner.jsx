@@ -246,7 +246,7 @@ export default function SearchBanner({
                     
                     {/* Short Answer */}
                     <div className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 line-clamp-2 mobile-optimized">
-                      {stripHtml(suggestion.shortAnswer)}
+                      {stripHtml(suggestion.short_answer || suggestion.shortAnswer)}
                     </div>
                     
                     {/* Tags */}

@@ -4,50 +4,44 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import CardQuestion from '../components/CardQuestion.astro';
 import SearchBanner from '../components/SearchBanner.jsx';
 
-// Get search query from URL parameters
+// Get search query and pagination from URL parameters
 const url = Astro.url;
 const searchQuery = url.searchParams.get('q') || '';
 const trimmedQuery = searchQuery.trim();
+const page = Math.max(1, parseInt(url.searchParams.get('page') || '1'));
+const limit = 12; // Results per page
 
-// Get all Q&A entries for searching
-const allQuestions = await getCollection('qa');
-
-// Filter questions based on search query
-let filteredQuestions: typeof allQuestions = [];
+// Database search results
+let searchResults: any = {
+  suggestions: [],
+  pagination: { page: 1, limit, total: 0, hasMore: false },
+  searchInfo: { query: trimmedQuery, resultsCount: 0 }
+};
 let searchPerformed = false;
+let searchError = false;
 
 if (trimmedQuery.length >= 2) {
   searchPerformed = true;
-  const queryLower = trimmedQuery.toLowerCase();
   
-  filteredQuestions = allQuestions.filter((question) => {
-    const titleMatch = question.data.question.toLowerCase().includes(queryLower);
-    const shortAnswerMatch = question.data.shortAnswer.toLowerCase().includes(queryLower);
-    const tagsMatch = question.data.tags.some(tag => 
-      tag.toLowerCase().includes(queryLower)
-    );
+  try {
+    // Call database-backed search API
+    const searchUrl = new URL('/api/search', Astro.url.origin);
+    searchUrl.searchParams.set('q', trimmedQuery);
+    searchUrl.searchParams.set('page', page.toString());
+    searchUrl.searchParams.set('limit', limit.toString());
     
-    // Also search in content (first 500 characters)
-    const contentMatch = question.body.toLowerCase().slice(0, 500).includes(queryLower);
+    const response = await fetch(searchUrl.toString());
     
-    return titleMatch || shortAnswerMatch || tagsMatch || contentMatch;
-  });
-
-  // Sort by relevance (title matches first, then short answer, then content)
-  filteredQuestions.sort((a, b) => {
-    const aTitle = a.data.question.toLowerCase().includes(queryLower);
-    const bTitle = b.data.question.toLowerCase().includes(queryLower);
-    const aShortAnswer = a.data.shortAnswer.toLowerCase().includes(queryLower);
-    const bShortAnswer = b.data.shortAnswer.toLowerCase().includes(queryLower);
-    
-    if (aTitle && !bTitle) return -1;
-    if (!aTitle && bTitle) return 1;
-    if (aShortAnswer && !bShortAnswer) return -1;
-    if (!aShortAnswer && bShortAnswer) return 1;
-    
-    // If same relevance, sort by date (newest first)
-    return new Date(b.data.pubDate).getTime() - new Date(a.data.pubDate).getTime();
-  });
+    if (response.ok) {
+      searchResults = await response.json();
+    } else {
+      console.error('Search API error:', response.status, response.statusText);
+      searchError = true;
+    }
+  } catch (error) {
+    console.error('Search request failed:', error);
+    searchError = true;
+  }
 }
 
 // SEO meta data
@@ -55,10 +49,11 @@ const title = searchPerformed
   ? `نتائج البحث عن "${trimmedQuery}" - موقع الأسئلة والأجوبة`
   : 'البحث في الأسئلة والأجوبة';
 const description = searchPerformed
-  ? `نتائج البحث عن "${trimmedQuery}" في موقع الأسئلة والأجوبة. ${filteredQuestions.length} نتيجة متاحة.`
+  ? `نتائج البحث عن "${trimmedQuery}" في موقع الأسئلة والأجوبة. ${searchResults.pagination.total} نتيجة متاحة.`
   : 'ابحث في مجموعة شاملة من الأسئلة والأجوبة باللغة العربية. اكتشف الإجابات التي تحتاجها.';
 
-// Popular search suggestions (most common tags)
+// Popular search suggestions (fallback to content collections for popular tags)
+const allQuestions = await getCollection('qa');
 const tagCounts = new Map<string, number>();
 allQuestions.forEach((question) => {
   question.data.tags.forEach((tag) => {
@@ -85,9 +80,11 @@ const popularSearches = Array.from(tagCounts.entries())
           نتائج البحث عن: <span class="font-semibold text-indigo-600 dark:text-indigo-400">"{trimmedQuery}"</span>
         </p>
         <div class="text-sm text-zinc-500 dark:text-zinc-400">
-          {filteredQuestions.length === 0 
-            ? 'لا توجد نتائج' 
-            : `${filteredQuestions.length} ${filteredQuestions.length === 1 ? 'نتيجة' : 'نتيجة'} متاحة`
+          {searchError 
+            ? 'حدث خطأ في البحث' 
+            : searchResults.suggestions.length === 0 
+              ? 'لا توجد نتائج' 
+              : `${searchResults.pagination.total} ${searchResults.pagination.total === 1 ? 'نتيجة' : 'نتيجة'} متاحة`
           }
         </div>
       </div>
@@ -106,19 +103,90 @@ const popularSearches = Array.from(tagCounts.entries())
 
   <!-- Search Results -->
   {searchPerformed ? (
-    filteredQuestions.length > 0 ? (
-      <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-12">
-        {filteredQuestions.map((question) => (
-          <CardQuestion
-            href={`/q/${question.slug}`}
-            title={question.data.question}
-            description={question.data.shortAnswer}
-            date={question.data.pubDate}
-            tags={question.data.tags}
-            difficulty={question.data.difficulty}
-          />
-        ))}
+    searchError ? (
+      <!-- Search Error State -->
+      <div class="text-center py-12">
+        <div class="max-w-md mx-auto">
+          <div class="mx-auto w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mb-6">
+            <svg class="w-8 h-8 text-red-500 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <h2 class="text-xl font-semibold text-zinc-900 dark:text-zinc-100 mb-3">
+            حدث خطأ في البحث
+          </h2>
+          <p class="text-zinc-600 dark:text-zinc-300 mb-6">
+            نعتذر، حدث خطأ أثناء البحث. يرجى المحاولة مرة أخرى أو تصفح المحتوى مباشرة.
+          </p>
+          <div class="flex flex-col sm:flex-row gap-3 justify-center">
+            <button
+              onclick="window.location.reload()"
+              class="inline-flex items-center justify-center px-6 py-3 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white font-medium rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-zinc-950 hover:scale-105"
+            >
+              إعادة المحاولة
+            </button>
+            <a
+              href="/questions"
+              class="inline-flex items-center justify-center px-6 py-3 border border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:text-zinc-300 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 font-medium rounded-lg transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-zinc-950 hover:scale-105"
+            >
+              تصفح الأسئلة
+            </a>
+          </div>
+        </div>
       </div>
+    ) : searchResults.suggestions.length > 0 ? (
+      <>
+        <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-8">
+          {searchResults.suggestions.map((question: any) => (
+            <CardQuestion
+              href={`/q/${question.slug}`}
+              title={question.question}
+              description={question.short_answer}
+              date={new Date(question.pub_date)}
+              tags={question.tags}
+              difficulty={question.difficulty}
+            />
+          ))}
+        </div>
+        
+        <!-- Pagination -->
+        {searchResults.pagination.total > limit && (
+          <div class="flex justify-center items-center gap-4 mb-12">
+            <div class="flex items-center gap-2">
+              <!-- Previous Page -->
+              {page > 1 && (
+                <a
+                  href={`/search?q=${encodeURIComponent(trimmedQuery)}&page=${page - 1}`}
+                  class="inline-flex items-center gap-2 px-4 py-2 text-zinc-600 dark:text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-zinc-950 rounded-md"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                  </svg>
+                  السابق
+                </a>
+              )}
+              
+              <!-- Page Info -->
+              <div class="px-4 py-2 text-sm text-zinc-600 dark:text-zinc-400">
+                صفحة {page} من {Math.ceil(searchResults.pagination.total / limit)}
+              </div>
+              
+              <!-- Next Page -->
+              {searchResults.pagination.hasMore && (
+                <a
+                  href={`/search?q=${encodeURIComponent(trimmedQuery)}&page=${page + 1}`}
+                  class="inline-flex items-center gap-2 px-4 py-2 text-zinc-600 dark:text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-zinc-950 rounded-md"
+                >
+                  التالي
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                  </svg>
+                </a>
+              )}
+            </div>
+          </div>
+        )}
+      </>
     ) : (
       <!-- No Results State -->
       <div class="text-center py-12">

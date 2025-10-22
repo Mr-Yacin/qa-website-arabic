@@ -1,89 +1,169 @@
 /**
- * Search API endpoint using database full-text search
- * Optimized for 500+ questions
+ * Database-backed search API with PostgreSQL full-text search and pagination
+ * Uses tsvector and ts_rank for relevance scoring with ILIKE fallback for short queries
  */
 
 import type { APIRoute } from 'astro';
-import { searchQuestions } from '../../lib/search';
+import { createDatabaseConnection, executeQuery } from '../../lib/database';
+
+// Search result interface
+interface SearchResult {
+  slug: string;
+  question: string;
+  short_answer: string;
+  tags: string[];
+  difficulty: string;
+  pub_date: string;
+  rating_avg: number;
+  rating_count: number;
+  rank?: number;
+}
+
+// Search response interface
+interface SearchResponse {
+  suggestions: SearchResult[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    hasMore: boolean;
+  };
+  searchInfo: {
+    query: string;
+    resultsCount: number;
+  };
+}
 
 export const GET: APIRoute = async ({ request }) => {
   try {
-    const searchParams = new URL(request.url).searchParams;
+    const url = new URL(request.url);
+    const searchParams = url.searchParams;
     
-    const query = searchParams.get('q') || '';
-    const tags = searchParams.get('tags')?.split(',').filter(Boolean) || [];
-    const difficulty = searchParams.get('difficulty') || undefined;
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = Math.min(parseInt(searchParams.get('limit') || '10'), 50); // Max 50 per page
-    const sortBy = (searchParams.get('sort') as 'date' | 'rating' | 'relevance') || 'relevance';
-    const sortOrder = (searchParams.get('order') as 'asc' | 'desc') || 'desc';
-    
+    const query = searchParams.get('q')?.trim() || '';
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
+    const limit = Math.min(Math.max(1, parseInt(searchParams.get('limit') || '10')), 50);
     const offset = (page - 1) * limit;
     
-    // Validate inputs
-    if (page < 1) {
-      return new Response(JSON.stringify({ 
-        error: 'Invalid page number' 
-      }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
-    
+    // Validate query length
     if (query.length > 200) {
       return new Response(JSON.stringify({ 
-        error: 'Search query too long' 
+        error: 'Search query too long (max 200 characters)',
+        suggestions: [],
+        pagination: { page: 1, limit, total: 0, hasMore: false },
+        searchInfo: { query, resultsCount: 0 }
       }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' }
       });
     }
+
+    // Return empty results for empty query
+    if (!query) {
+      return new Response(JSON.stringify({
+        suggestions: [],
+        pagination: { page: 1, limit, total: 0, hasMore: false },
+        searchInfo: { query: '', resultsCount: 0 }
+      }), {
+        status: 200,
+        headers: { 
+          'Content-Type': 'application/json',
+          'Cache-Control': 'public, max-age=300'
+        }
+      });
+    }
+
+    const sql = createDatabaseConnection();
     
-    // Perform search
-    const result = await searchQuestions({
-      query,
-      tags,
-      difficulty,
-      limit,
-      offset,
-      sortBy,
-      sortOrder
-    });
-    
-    // Calculate pagination info
-    const totalPages = Math.ceil(result.total / limit);
-    const currentPage = page;
-    
-    // Format questions for both full results and suggestions
-    const formattedQuestions = result.questions.map(q => ({
-      slug: q.slug,
-      question: q.question,
-      shortAnswer: q.shortAnswer,
-      tags: q.tags,
-      difficulty: q.difficulty,
-      pubDate: q.pubDate,
-      ratingAvg: q.ratingAvg,
-      ratingCount: q.ratingCount
+    let results: SearchResult[];
+    let countResult: { total: number }[];
+
+    if (query.length >= 3) {
+      // Use PostgreSQL full-text search for longer queries
+      results = await executeQuery(sql, async (sql) => {
+        return await sql`
+          SELECT 
+            slug, 
+            question, 
+            short_answer, 
+            tags,
+            difficulty,
+            pub_date::text,
+            COALESCE(rating_avg, 0)::float as rating_avg,
+            COALESCE(rating_count, 0)::int as rating_count,
+            ts_rank(search_vector, to_tsquery('simple', ${query + ':*'}))::float as rank
+          FROM questions 
+          WHERE search_vector @@ to_tsquery('simple', ${query + ':*'})
+          ORDER BY rank DESC, pub_date DESC
+          LIMIT ${limit} OFFSET ${offset}
+        `;
+      });
+      
+      countResult = await executeQuery(sql, async (sql) => {
+        return await sql`
+          SELECT COUNT(*)::int as total
+          FROM questions 
+          WHERE search_vector @@ to_tsquery('simple', ${query + ':*'})
+        `;
+      });
+    } else {
+      // Use ILIKE for short queries (fallback)
+      const likePattern = `%${query}%`;
+      
+      results = await executeQuery(sql, async (sql) => {
+        return await sql`
+          SELECT 
+            slug, 
+            question, 
+            short_answer, 
+            tags,
+            difficulty,
+            pub_date::text,
+            COALESCE(rating_avg, 0)::float as rating_avg,
+            COALESCE(rating_count, 0)::int as rating_count,
+            0::float as rank
+          FROM questions 
+          WHERE question ILIKE ${likePattern} OR short_answer ILIKE ${likePattern}
+          ORDER BY pub_date DESC
+          LIMIT ${limit} OFFSET ${offset}
+        `;
+      });
+      
+      countResult = await executeQuery(sql, async (sql) => {
+        return await sql`
+          SELECT COUNT(*)::int as total
+          FROM questions 
+          WHERE question ILIKE ${likePattern} OR short_answer ILIKE ${likePattern}
+        `;
+      });
+    }
+
+    const total = countResult[0]?.total || 0;
+    const hasMore = offset + results.length < total;
+
+    // Format results for response
+    const suggestions = results.map(row => ({
+      slug: row.slug,
+      question: row.question,
+      short_answer: row.short_answer,
+      tags: row.tags,
+      difficulty: row.difficulty,
+      pub_date: row.pub_date,
+      rating_avg: row.rating_avg,
+      rating_count: row.rating_count,
+      rank: row.rank
     }));
 
-    const response = {
-      questions: formattedQuestions,
-      suggestions: formattedQuestions.slice(0, 5), // First 5 for dropdown suggestions
+    const response: SearchResponse = {
+      suggestions,
       pagination: {
-        currentPage,
-        totalPages,
-        totalQuestions: result.total,
-        hasNext: result.hasMore,
-        hasPrev: currentPage > 1,
-        limit
+        page,
+        limit,
+        total,
+        hasMore
       },
       searchInfo: {
         query,
-        tags,
-        difficulty,
-        sortBy,
-        sortOrder,
-        resultsCount: result.questions.length
+        resultsCount: results.length
       }
     };
     
@@ -96,10 +176,13 @@ export const GET: APIRoute = async ({ request }) => {
     });
     
   } catch (error) {
-    console.error('Search API error:', error);
+    console.error('Database search API error:', error);
     
     return new Response(JSON.stringify({ 
       error: 'Internal server error',
+      suggestions: [],
+      pagination: { page: 1, limit: 10, total: 0, hasMore: false },
+      searchInfo: { query: '', resultsCount: 0 },
       message: process.env.NODE_ENV === 'development' ? (error as Error).message : undefined
     }), {
       status: 500,
