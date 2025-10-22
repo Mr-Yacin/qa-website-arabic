@@ -5,7 +5,7 @@ export type ThemeMode = 'light' | 'dark' | 'system';
 export const DEFAULT_THEME: ThemeMode = 'system';
 
 // Theme storage key
-const THEME_STORAGE_KEY = 'qa-site-theme';
+export const THEME_STORAGE_KEY = 'qa-site-theme';
 
 // Get theme from localStorage or return default
 export function getStoredTheme(): ThemeMode {
