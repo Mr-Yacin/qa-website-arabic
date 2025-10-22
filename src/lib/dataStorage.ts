@@ -41,15 +41,16 @@ export interface SearchIndex {
   lastUpdated: Date | null;
 }
 
-// Database connection
-const sql = process.env.DATABASE_URL ? neon(process.env.DATABASE_URL) : null;
+// Database connection - try both import.meta.env and process.env for compatibility
+const DATABASE_URL = import.meta.env.DATABASE_URL || process.env.DATABASE_URL;
+const sql = DATABASE_URL ? neon(DATABASE_URL) : null;
 
 // Check if we're in any serverless environment
 const isServerless: boolean = typeof process !== 'undefined' && Boolean(
-  process.env.VERCEL || 
-  process.env.NETLIFY || 
-  process.env.AWS_LAMBDA_FUNCTION_NAME ||
-  process.env.NODE_ENV === 'production'
+  import.meta.env.VERCEL || process.env.VERCEL || 
+  import.meta.env.NETLIFY || process.env.NETLIFY || 
+  import.meta.env.AWS_LAMBDA_FUNCTION_NAME || process.env.AWS_LAMBDA_FUNCTION_NAME ||
+  import.meta.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'production'
 );
 
 // In-memory fallback storage for environments without database
