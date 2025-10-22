@@ -15,8 +15,8 @@ async function sendAdminNotification(contactData: ContactFormData): Promise<void
   const resendApiKey = import.meta.env.RESEND_API_KEY || process.env.RESEND_API_KEY;
   console.log('Environment check - RESEND_API_KEY exists:', !!resendApiKey);
   console.log('Environment check - RESEND_API_KEY length:', resendApiKey?.length || 0);
-  console.log('Environment check - import.meta.env exists:', !!import.meta.env.RESEND_API_KEY);
-  console.log('Environment check - process.env exists:', !!process.env.RESEND_API_KEY);
+  console.log('Environment check - import.meta.env.RESEND_API_KEY:', !!import.meta.env.RESEND_API_KEY);
+  console.log('Environment check - process.env.RESEND_API_KEY:', !!process.env.RESEND_API_KEY);
   
   if (!resendApiKey) {
     console.info('Email notifications disabled (RESEND_API_KEY not configured). Contact message saved to database.');
