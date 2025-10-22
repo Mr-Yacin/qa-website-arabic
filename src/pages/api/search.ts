@@ -72,6 +72,19 @@ export const GET: APIRoute = async ({ request }) => {
       });
     }
 
+    // Check if database is available
+    if (!process.env.DATABASE_URL) {
+      return new Response(JSON.stringify({ 
+        error: 'Database not configured. Please set DATABASE_URL environment variable.',
+        suggestions: [],
+        pagination: { page: 1, limit, total: 0, hasMore: false },
+        searchInfo: { query, resultsCount: 0 }
+      }), {
+        status: 503,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
     const sql = createDatabaseConnection();
     
     let results: SearchResult[];

@@ -36,6 +36,12 @@ if (trimmedQuery.length >= 2) {
       searchResults = await response.json();
     } else {
       console.error('Search API error:', response.status, response.statusText);
+      
+      // If database is not configured (503), provide a more helpful message
+      if (response.status === 503) {
+        console.warn('Database not configured, search functionality limited');
+      }
+      
       searchError = true;
     }
   } catch (error) {
@@ -113,10 +119,10 @@ const popularSearches = Array.from(tagCounts.entries())
             </svg>
           </div>
           <h2 class="text-xl font-semibold text-zinc-900 dark:text-zinc-100 mb-3">
-            حدث خطأ في البحث
+            البحث غير متاح حالياً
           </h2>
           <p class="text-zinc-600 dark:text-zinc-300 mb-6">
-            نعتذر، حدث خطأ أثناء البحث. يرجى المحاولة مرة أخرى أو تصفح المحتوى مباشرة.
+            نعتذر، خدمة البحث غير متاحة حالياً. يمكنك تصفح المحتوى مباشرة من خلال الروابط أدناه.
           </p>
           <div class="flex flex-col sm:flex-row gap-3 justify-center">
             <button

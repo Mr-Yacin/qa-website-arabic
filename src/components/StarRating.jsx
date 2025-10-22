@@ -50,6 +50,7 @@ export default function StarRating({ slug, initialData }) {
       const response = await fetch(`/api/avg?slug=${encodeURIComponent(slug)}`);
       if (response.ok) {
         const data = await response.json();
+        // Handle database-backed API response format
         setAverageRating(data.avg);
         setVoteCount(data.count);
         
@@ -59,7 +60,7 @@ export default function StarRating({ slug, initialData }) {
           // Also save to localStorage for consistency
           localStorage.setItem(`rating:${slug}`, data.userRating.toString());
         } else {
-          // Check localStorage as fallback
+          // Check localStorage as fallback for offline scenarios
           const savedRating = localStorage.getItem(`rating:${slug}`);
           if (savedRating) {
             const parsedRating = parseInt(savedRating, 10);
@@ -72,7 +73,7 @@ export default function StarRating({ slug, initialData }) {
       }
     } catch (error) {
       console.error('Error loading existing rating:', error);
-      // Fallback to localStorage
+      // Fallback to localStorage for offline scenarios
       const savedRating = localStorage.getItem(`rating:${slug}`);
       if (savedRating) {
         const parsedRating = parseInt(savedRating, 10);
@@ -110,9 +111,19 @@ export default function StarRating({ slug, initialData }) {
 
       if (response.ok) {
         const data = await response.json();
-        // Update average rating and vote count from server response
-        setAverageRating(data.average);
-        setVoteCount(data.count);
+        // Handle database-backed API response format
+        if (data.ok) {
+          setAverageRating(data.average);
+          setVoteCount(data.count);
+        } else {
+          console.warn('Rating API returned error:', data.message);
+          // Revert to previous state
+          setRating(previousRating);
+          if (!hasRated) {
+            setHasRated(false);
+            localStorage.removeItem(`rating:${slug}`);
+          }
+        }
       } else {
         // If API fails, revert to previous state
         console.warn('Failed to submit rating to server');

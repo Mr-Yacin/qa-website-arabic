@@ -25,21 +25,7 @@ export interface ContactStorage {
   lastId: number;
 }
 
-export interface SearchQuestion {
-  slug: string;
-  question: string;
-  shortAnswer: string;
-  content: string;
-  tags: string[];
-  searchTerms: string[];
-  difficulty?: string;
-  pubDate?: string;
-}
-
-export interface SearchIndex {
-  questions: SearchQuestion[];
-  lastUpdated: Date | null;
-}
+// Search index interfaces removed - now using database-first approach
 
 // Database connection - try both import.meta.env and process.env for compatibility
 const DATABASE_URL = import.meta.env.DATABASE_URL || process.env.DATABASE_URL;
@@ -56,7 +42,6 @@ const isServerless: boolean = typeof process !== 'undefined' && Boolean(
 // In-memory fallback storage for environments without database
 let ratingsCache: RatingData = {};
 let contactsCache: ContactStorage = { messages: [], lastId: 0 };
-let searchIndexCache: SearchIndex = { questions: [], lastUpdated: null };
 
 /**
  * Initialize database tables if they don't exist
@@ -88,19 +73,9 @@ async function initializeTables(): Promise<void> {
       )
     `;
 
-    // Create search_index table
-    await sql`
-      CREATE TABLE IF NOT EXISTS search_index (
-        id SERIAL PRIMARY KEY,
-        questions_data JSONB NOT NULL,
-        last_updated TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-      )
-    `;
-
     // Create indexes for better performance
     await sql`CREATE INDEX IF NOT EXISTS idx_ratings_slug ON ratings(question_slug)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_contacts_timestamp ON contacts(timestamp DESC)`;
-    await sql`CREATE INDEX IF NOT EXISTS idx_search_updated ON search_index(last_updated DESC)`;
 
   } catch (error) {
     console.error('Error initializing database tables:', error);
@@ -110,7 +85,7 @@ async function initializeTables(): Promise<void> {
 /**
  * Load data from Neon database or fallback to in-memory cache
  */
-async function loadFromStorage<T>(cacheKey: 'ratings' | 'contacts' | 'searchIndex', defaultValue: T): Promise<T> {
+async function loadFromStorage<T>(cacheKey: 'ratings' | 'contacts', defaultValue: T): Promise<T> {
   // Try Neon database first if available
   if (sql) {
     try {
@@ -150,18 +125,7 @@ async function loadFromStorage<T>(cacheKey: 'ratings' | 'contacts' | 'searchInde
           return contacts as T;
         }
         
-        case 'searchIndex': {
-          const [row] = await sql`SELECT questions_data, last_updated FROM search_index ORDER BY last_updated DESC LIMIT 1`;
-          
-          if (row) {
-            return {
-              questions: row.questions_data,
-              lastUpdated: new Date(row.last_updated)
-            } as T;
-          }
-          
-          return defaultValue;
-        }
+
       }
     } catch (error) {
       console.warn(`Failed to load from Neon database for ${cacheKey}:`, error);
@@ -175,8 +139,6 @@ async function loadFromStorage<T>(cacheKey: 'ratings' | 'contacts' | 'searchInde
       return ratingsCache as T;
     case 'contacts':
       return contactsCache as T;
-    case 'searchIndex':
-      return searchIndexCache as T;
     default:
       return defaultValue;
   }
@@ -185,7 +147,7 @@ async function loadFromStorage<T>(cacheKey: 'ratings' | 'contacts' | 'searchInde
 /**
  * Save data to Neon database or fallback to in-memory cache
  */
-async function saveToStorage<T>(cacheKey: 'ratings' | 'contacts' | 'searchIndex', data: T): Promise<void> {
+async function saveToStorage<T>(cacheKey: 'ratings' | 'contacts', data: T): Promise<void> {
   // Try Neon database first if available
   if (sql) {
     try {
@@ -215,27 +177,7 @@ async function saveToStorage<T>(cacheKey: 'ratings' | 'contacts' | 'searchIndex'
           return;
         }
         
-        case 'searchIndex': {
-          const searchIndex = data as SearchIndex;
-          
-          await sql`
-            INSERT INTO search_index (questions_data, last_updated)
-            VALUES (${JSON.stringify(searchIndex.questions)}, ${searchIndex.lastUpdated?.toISOString() || new Date().toISOString()})
-          `;
-          
-          // Keep only the latest 5 search index entries
-          await sql`
-            DELETE FROM search_index 
-            WHERE id NOT IN (
-              SELECT id FROM search_index 
-              ORDER BY last_updated DESC 
-              LIMIT 5
-            )
-          `;
-          
-          console.log('Successfully saved search index to Neon database');
-          return;
-        }
+
       }
     } catch (error) {
       console.warn(`Failed to save to Neon database for ${cacheKey}:`, error);
@@ -250,9 +192,6 @@ async function saveToStorage<T>(cacheKey: 'ratings' | 'contacts' | 'searchIndex'
       break;
     case 'contacts':
       contactsCache = data as ContactStorage;
-      break;
-    case 'searchIndex':
-      searchIndexCache = data as SearchIndex;
       break;
   }
   
@@ -303,14 +242,7 @@ export async function saveContactMessage(message: ContactFormData): Promise<void
   await saveContacts(contacts);
 }
 
-// Search index functions
-export async function loadSearchIndex(): Promise<SearchIndex> {
-  return loadFromStorage('searchIndex', { questions: [], lastUpdated: null });
-}
-
-export async function saveSearchIndex(index: SearchIndex): Promise<void> {
-  return saveToStorage('searchIndex', index);
-}
+// Search index functions removed - now using database-first approach
 
 // Utility functions
 export function generateId(): string {

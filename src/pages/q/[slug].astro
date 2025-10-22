@@ -29,7 +29,7 @@ const { question, shortAnswer, pubDate, updatedDate, tags, difficulty, heroImage
 const allQuestions = await getCollection('qa');
 const relatedQuestions = relatedByTags(entry, allQuestions, 3);
 
-// Load initial rating data for better hydration
+// Load initial rating data from database for better hydration
 let initialRatingData = {
   average: null,
   count: 0,
@@ -37,28 +37,45 @@ let initialRatingData = {
 };
 
 try {
-  // Import data storage functions
-  const { loadRatings, generateUserId } = await import('../../lib/dataStorage.js');
+  // Import database functions
+  const { createDatabaseConnection } = await import('../../lib/database.js');
+  const crypto = await import('crypto');
   
-  // Load ratings data
-  const ratingsData = await loadRatings();
-  const questionRating = ratingsData[entry.slug];
+  // Generate privacy-friendly user hash
+  const ip = Astro.request.headers.get('cf-connecting-ip') || 
+             Astro.request.headers.get('x-forwarded-for') || 
+             Astro.request.headers.get('x-real-ip') || 
+             Astro.clientAddress || '0.0.0.0';
+  const userAgent = Astro.request.headers.get('user-agent') || '';
+  const salt = process.env.HASH_SALT || 'default-salt';
   
-  if (questionRating) {
-    initialRatingData.average = questionRating.average;
-    initialRatingData.count = questionRating.count;
-    
-    // Generate user ID to check if they have rated this question
-    const userAgent = Astro.request.headers.get('user-agent') || '';
-    const ip = Astro.clientAddress || '127.0.0.1';
-    const userId = generateUserId(ip, userAgent);
-    
-    if (userId in questionRating.ratings) {
-      initialRatingData.userRating = questionRating.ratings[userId];
-    }
+  const userHash = crypto
+    .createHash('sha256')
+    .update(`${ip}|${userAgent}|${salt}`)
+    .digest('hex')
+    .slice(0, 16);
+  
+  // Get database connection and load rating data
+  const sql = createDatabaseConnection();
+  
+  const [questionData] = await sql`
+    SELECT 
+      q.rating_avg::float AS average,
+      q.rating_count::int AS count,
+      r.rating AS user_rating
+    FROM questions q
+    LEFT JOIN ratings r ON r.slug = q.slug AND r.user_hash = ${userHash}
+    WHERE q.slug = ${entry.slug}
+    LIMIT 1
+  `;
+  
+  if (questionData) {
+    initialRatingData.average = questionData.average;
+    initialRatingData.count = questionData.count;
+    initialRatingData.userRating = questionData.user_rating;
   }
 } catch (error) {
-  console.warn('Failed to load initial rating data:', error);
+  console.warn('Failed to load initial rating data from database:', error);
   // Continue with default values
 }
 
@@ -279,7 +296,7 @@ const breadcrumbStructuredData = {
         </div>
         {initialRatingData.average !== null && initialRatingData.count > 0 ? (
           <div class="text-sm text-zinc-600 dark:text-zinc-400 text-center transition-colors duration-200">
-            <span>متوسط التقييم: {initialRatingData.average.toFixed(1)} من 5</span>
+            <span>متوسط التقييم: {Number(initialRatingData.average).toFixed(1)} من 5</span>
             <span class="mx-2">•</span>
             <span>({initialRatingData.count} {initialRatingData.count === 1 ? 'تقييم' : 'تقييمات'})</span>
           </div>
