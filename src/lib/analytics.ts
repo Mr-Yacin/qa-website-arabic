@@ -35,36 +35,60 @@ export interface TagClickEvent {
   page_location: string;
 }
 
-// Check if Google Analytics is available
+// Check if Google Analytics is available with performance optimization
 export const isAnalyticsAvailable = (): boolean => {
-  return typeof window !== 'undefined' && typeof window.gtag === 'function';
+  return typeof window !== 'undefined' && 
+         typeof window.gtag === 'function' && 
+         window.dataLayer !== undefined;
 };
 
-// Track question views
+// Debounced tracking to prevent excessive calls
+const trackingQueue = new Map<string, NodeJS.Timeout>();
+
+const debouncedTrack = (eventKey: string, trackFunction: () => void, delay: number = 100): void => {
+  // Clear existing timeout for this event type
+  if (trackingQueue.has(eventKey)) {
+    clearTimeout(trackingQueue.get(eventKey)!);
+  }
+  
+  // Set new timeout
+  const timeoutId = setTimeout(() => {
+    trackFunction();
+    trackingQueue.delete(eventKey);
+  }, delay);
+  
+  trackingQueue.set(eventKey, timeoutId);
+};
+
+// Track question views with performance optimization
 export const trackQuestionView = (event: QuestionViewEvent): void => {
   if (!isAnalyticsAvailable()) return;
   
-  window.gtag!('event', 'view_item', {
-    item_id: event.question_id,
-    item_name: event.question_title,
-    item_category: 'Question',
-    custom_parameter_1: event.difficulty,
-    custom_parameter_2: event.tags.join(','),
-    content_type: 'question',
-    language: 'ar'
-  });
+  debouncedTrack(`question_view_${event.question_id}`, () => {
+    window.gtag!('event', 'view_item', {
+      item_id: event.question_id,
+      item_name: event.question_title,
+      item_category: 'Question',
+      custom_parameter_1: event.difficulty,
+      custom_parameter_2: event.tags.join(','),
+      content_type: 'question',
+      language: 'ar'
+    });
+  }, 200);
 };
 
-// Track search queries
+// Track search queries with debouncing to prevent excessive calls
 export const trackSearch = (event: SearchEvent): void => {
   if (!isAnalyticsAvailable()) return;
   
-  window.gtag!('event', 'search', {
-    search_term: event.search_term,
-    custom_parameter_1: event.results_count.toString(),
-    content_type: 'search',
-    language: 'ar'
-  });
+  debouncedTrack(`search_${event.search_term}`, () => {
+    window.gtag!('event', 'search', {
+      search_term: event.search_term,
+      custom_parameter_1: event.results_count.toString(),
+      content_type: 'search',
+      language: 'ar'
+    });
+  }, 500); // Longer delay for search to prevent spam
 };
 
 // Track search result clicks

@@ -1,15 +1,24 @@
 import React, { useState, useEffect } from 'react';
 
-// Analytics tracking function
+// Performance-optimized analytics tracking function
 const trackRating = (questionId, rating, previousRating) => {
-  if (typeof window !== 'undefined' && window.gtag) {
-    window.gtag('event', 'rate_content', {
-      item_id: questionId,
-      rating: rating,
-      previous_rating: previousRating,
-      content_type: 'question_rating',
-      language: 'ar'
-    });
+  if (typeof window !== 'undefined' && window.gtag && window.dataLayer) {
+    // Use requestIdleCallback to prevent blocking UI updates
+    const trackingFunction = () => {
+      window.gtag('event', 'rate_content', {
+        item_id: questionId,
+        rating: rating,
+        previous_rating: previousRating,
+        content_type: 'question_rating',
+        language: 'ar'
+      });
+    };
+
+    if (window.requestIdleCallback) {
+      window.requestIdleCallback(trackingFunction, { timeout: 1000 });
+    } else {
+      setTimeout(trackingFunction, 0);
+    }
   }
 };
 

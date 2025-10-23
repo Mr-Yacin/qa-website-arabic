@@ -1,5 +1,5 @@
 ---
-// Google Analytics component for GA4
+// Google Analytics component for GA4 - Performance Optimized
 // Only loads in production to avoid tracking during development
 
 const GA_TRACKING_ID = import.meta.env.PUBLIC_GA_TRACKING_ID;
@@ -11,39 +11,78 @@ const shouldRender = !isDev && GA_TRACKING_ID;
 
 {shouldRender && (
   <>
-    <!-- Google tag (gtag.js) -->
-    <script async src={`https://www.googletagmanager.com/gtag/js?id=${GA_TRACKING_ID}`}></script>
+    <!-- Preconnect to Google Analytics domains for faster loading -->
+    <link rel="preconnect" href="https://www.googletagmanager.com" crossorigin>
+    <link rel="dns-prefetch" href="https://www.google-analytics.com">
+    
+    <!-- Google tag (gtag.js) with performance optimizations -->
+    <script is:inline async src={`https://www.googletagmanager.com/gtag/js?id=${GA_TRACKING_ID}`}></script>
     <script is:inline define:vars={{ GA_TRACKING_ID }}>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
+      // Performance-optimized Google Analytics initialization
+      (function() {
+        // Initialize dataLayer immediately to prevent errors
+        window.dataLayer = window.dataLayer || [];
+        
+        // Optimized gtag function with reduced overhead
+        function gtag() {
+          dataLayer.push(arguments);
+        }
+        
+        // Make gtag globally available
+        window.gtag = gtag;
+        
+        // Initialize with timestamp
+        gtag('js', new Date());
 
-      gtag('config', GA_TRACKING_ID, {
-        // Enhanced privacy settings
-        anonymize_ip: true,
-        allow_google_signals: false,
-        allow_ad_personalization_signals: false,
-        
-        // Performance optimizations
-        send_page_view: true,
-        
-        // Custom configuration for Arabic content
-        custom_map: {
-          'custom_parameter_1': 'language'
-        },
-        
-        // Set language for better analytics
-        language: 'ar',
-        country: 'SA'
-      });
+        // Defer configuration to prevent blocking
+        function initializeGA() {
+          gtag('config', GA_TRACKING_ID, {
+            // Enhanced privacy settings
+            anonymize_ip: true,
+            allow_google_signals: false,
+            allow_ad_personalization_signals: false,
+            
+            // Performance optimizations to reduce reflows
+            send_page_view: false, // We'll handle this manually
+            page_title: document.title,
+            page_location: window.location.href,
+            
+            // Reduce data collection for better performance
+            cookie_expires: 63072000, // 2 years
+            cookie_update: false,
+            
+            // Custom configuration for Arabic content
+            custom_map: {
+              'custom_parameter_1': 'language'
+            },
+            
+            // Set language for better analytics
+            language: 'ar',
+            country: 'SA'
+          });
 
-      // Track custom events for better insights
-      gtag('event', 'page_view', {
-        page_title: document.title,
-        page_location: window.location.href,
-        content_group1: 'Arabic Q&A',
-        language: 'ar'
-      });
+          // Send initial page view after configuration
+          gtag('event', 'page_view', {
+            page_title: document.title,
+            page_location: window.location.href,
+            content_group1: 'Arabic Q&A',
+            language: 'ar'
+          });
+        }
+
+        // Initialize GA after DOM is ready to prevent reflows
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', initializeGA);
+        } else {
+          // Use requestIdleCallback for better performance if available
+          if (window.requestIdleCallback) {
+            requestIdleCallback(initializeGA, { timeout: 2000 });
+          } else {
+            // Fallback to setTimeout with minimal delay
+            setTimeout(initializeGA, 100);
+          }
+        }
+      })();
     </script>
   </>
 )}

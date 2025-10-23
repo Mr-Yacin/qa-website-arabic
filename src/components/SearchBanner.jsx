@@ -1,14 +1,23 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 
-// Analytics tracking function for search
+// Performance-optimized analytics tracking function for search
 const trackSearch = (searchTerm, resultsCount) => {
-  if (typeof window !== 'undefined' && window.gtag) {
-    window.gtag('event', 'search', {
-      search_term: searchTerm,
-      custom_parameter_1: resultsCount.toString(),
-      content_type: 'search',
-      language: 'ar'
-    });
+  if (typeof window !== 'undefined' && window.gtag && window.dataLayer) {
+    // Use requestIdleCallback to prevent blocking main thread
+    const trackingFunction = () => {
+      window.gtag('event', 'search', {
+        search_term: searchTerm,
+        custom_parameter_1: resultsCount.toString(),
+        content_type: 'search',
+        language: 'ar'
+      });
+    };
+
+    if (window.requestIdleCallback) {
+      window.requestIdleCallback(trackingFunction, { timeout: 1000 });
+    } else {
+      setTimeout(trackingFunction, 0);
+    }
   }
 };
 
