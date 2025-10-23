@@ -1,0 +1,109 @@
+---
+// Performance optimization component to reduce critical request chains
+// This component helps defer non-critical JavaScript and resources
+---
+
+<!-- Critical Resource Hints -->
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://www.googletagmanager.com" crossorigin>
+
+<!-- Preload critical resources -->
+<script is:inline>
+  // Preload critical chunks based on current page
+  (function() {
+    const criticalChunks = [
+      '/_astro/client.js',
+      '/_astro/jsx-runtime.js'
+    ];
+    
+    // Only preload if browser supports it
+    if ('modulepreload' in HTMLLinkElement.prototype) {
+      criticalChunks.forEach(chunk => {
+        const link = document.createElement('link');
+        link.rel = 'modulepreload';
+        link.href = chunk;
+        document.head.appendChild(link);
+      });
+    }
+  })();
+</script>
+
+<!-- Defer non-critical resources -->
+<script is:inline>
+  // Defer loading of non-critical resources until after page load
+  window.addEventListener('load', function() {
+    // Prefetch non-critical chunks after page load
+    const nonCriticalChunks = [
+      '/_astro/SearchBanner.js',
+      '/_astro/analytics.js'
+    ];
+    
+    // Use requestIdleCallback if available, otherwise setTimeout
+    const deferLoad = (callback) => {
+      if ('requestIdleCallback' in window) {
+        requestIdleCallback(callback, { timeout: 2000 });
+      } else {
+        setTimeout(callback, 100);
+      }
+    };
+    
+    deferLoad(() => {
+      nonCriticalChunks.forEach(chunk => {
+        const link = document.createElement('link');
+        link.rel = 'prefetch';
+        link.href = chunk;
+        link.as = 'script';
+        document.head.appendChild(link);
+      });
+    });
+  });
+</script>
+
+<!-- Optimize font loading -->
+<script is:inline>
+  // Optimize font loading to prevent layout shift
+  (function() {
+    // Check if fonts are already cached
+    if (document.fonts && document.fonts.check) {
+      const arabicFont = 'Noto Sans Arabic';
+      
+      // If font is not available, show fallback immediately
+      if (!document.fonts.check(`16px "${arabicFont}"`)) {
+        document.documentElement.style.fontFamily = 'system-ui, -apple-system, BlinkMacSystemFont, sans-serif';
+        
+        // Load the font and switch when ready
+        document.fonts.load(`16px "${arabicFont}"`).then(() => {
+          document.documentElement.style.fontFamily = '';
+        }).catch(() => {
+          // Keep fallback if font fails to load
+          console.warn('Arabic font failed to load, using fallback');
+        });
+      }
+    }
+  })();
+</script>
+
+<!-- Performance monitoring -->
+<script is:inline>
+  // Monitor performance and log issues in development
+  if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+    window.addEventListener('load', function() {
+      // Check for performance issues
+      if ('performance' in window && 'getEntriesByType' in performance) {
+        setTimeout(() => {
+          const navigation = performance.getEntriesByType('navigation')[0];
+          const paint = performance.getEntriesByType('paint');
+          
+          if (navigation && navigation.loadEventEnd > 3000) {
+            console.warn('Slow page load detected:', navigation.loadEventEnd + 'ms');
+          }
+          
+          const lcp = paint.find(entry => entry.name === 'largest-contentful-paint');
+          if (lcp && lcp.startTime > 2500) {
+            console.warn('Poor LCP detected:', lcp.startTime + 'ms');
+          }
+        }, 1000);
+      }
+    });
+  }
+</script>

@@ -79,14 +79,62 @@ const description =
   <!-- Search Section -->
   <section class="mb-12">
     <div class="max-w-2xl mx-auto">
-      <SearchBanner 
-        client:load 
-        placeholder="ابحث في الأسئلة..." 
-        maxSuggestions={5} 
-        className="w-full"
-      />
+      <!-- Static search placeholder that loads immediately -->
+      <div id="search-placeholder" class="relative w-full">
+        <div class="relative">
+          <input
+            type="text"
+            placeholder="ابحث في الأسئلة..."
+            class="w-full px-4 py-3 pr-12 text-base sm:text-lg bg-white dark:bg-zinc-800 border-2 border-zinc-300 dark:border-zinc-600 rounded-lg focus:border-indigo-500 dark:focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-indigo-400 dark:focus:ring-offset-zinc-800 transition-all duration-200 text-zinc-900 dark:text-zinc-100 placeholder-zinc-500 dark:placeholder-zinc-400"
+            readonly
+            onclick="window.location.href='/search'"
+          />
+          <div class="absolute left-3 top-1/2 transform -translate-y-1/2 text-zinc-400 dark:text-zinc-500 pointer-events-none">
+            <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Dynamic SearchBanner loaded after page interaction -->
+      <div id="search-dynamic" class="hidden">
+        <SearchBanner 
+          client:idle 
+          placeholder="ابحث في الأسئلة..." 
+          maxSuggestions={5} 
+          className="w-full"
+        />
+      </div>
     </div>
   </section>
+
+  <script>
+    // Replace static search with dynamic version on first interaction
+    document.addEventListener('DOMContentLoaded', function() {
+      const placeholder = document.getElementById('search-placeholder');
+      const dynamic = document.getElementById('search-dynamic');
+      
+      if (placeholder && dynamic) {
+        // Replace on first click or focus
+        const activateSearch = () => {
+          placeholder.style.display = 'none';
+          dynamic.classList.remove('hidden');
+          dynamic.querySelector('input')?.focus();
+        };
+        
+        placeholder.addEventListener('click', activateSearch, { once: true });
+        placeholder.addEventListener('focusin', activateSearch, { once: true });
+        
+        // Also activate after a delay for better UX
+        setTimeout(() => {
+          if (placeholder.style.display !== 'none') {
+            activateSearch();
+          }
+        }, 3000);
+      }
+    });
+  </script>
 
   <!-- Latest Questions Section -->
   <section class="mb-12">

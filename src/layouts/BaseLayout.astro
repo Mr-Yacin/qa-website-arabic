@@ -1,6 +1,7 @@
 ---
 import SEO from '../components/SEO.astro';
 import GoogleAnalytics from '../components/GoogleAnalytics.astro';
+import PerformanceOptimizer from '../components/PerformanceOptimizer.astro';
 import Navbar from '../components/Navbar.astro';
 import Footer from '../components/Footer.astro';
 import BackToTop from '../components/BackToTop.astro';
@@ -36,6 +37,9 @@ const {
     
     <!-- Google Analytics -->
     <GoogleAnalytics />
+    
+    <!-- Performance Optimizations -->
+    <PerformanceOptimizer />
     
     <!-- Critical CSS - Inlined to prevent render blocking -->
     <style>
@@ -75,9 +79,19 @@ const {
       .dark *:focus-visible{outline-color:#818cf8}
     </style>
     
-    <!-- Performance optimizations -->
+    <!-- Critical Resource Hints for Performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
     <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+    <link rel="dns-prefetch" href="https://www.googletagmanager.com">
+    <link rel="dns-prefetch" href="https://www.google-analytics.com">
+    
+    <!-- Preload critical JavaScript chunks -->
+    <link rel="modulepreload" href="/_astro/client.js" as="script">
+    <link rel="modulepreload" href="/_astro/jsx-runtime.js" as="script">
+    
+    <!-- Prefetch non-critical resources -->
+    <link rel="prefetch" href="/_astro/SearchBanner.js" as="script">
+    <link rel="prefetch" href="/_astro/analytics.js" as="script">
     
     <!-- Optimize font loading with better fallback -->
     <link rel="preload" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;500;600;700&display=swap" as="style">

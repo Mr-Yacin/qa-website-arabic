@@ -39,22 +39,59 @@ export default defineConfig({
     }
   }),
   
-  // Performance optimizations
+  // Performance optimizations for critical request chains
   vite: {
     build: {
       // Disable CSS code splitting to prevent 404 issues
       cssCodeSplit: false,
+      // Optimize chunk splitting to reduce critical path
       rollupOptions: {
         output: {
-          manualChunks: {
-            'react-vendor': ['react', 'react-dom'],
-          }
+          manualChunks: (id) => {
+            // Create separate chunks for different types of modules
+            if (id.includes('node_modules')) {
+              if (id.includes('react') || id.includes('react-dom')) {
+                return 'react-vendor';
+              }
+              if (id.includes('@astrojs')) {
+                return 'astro-runtime';
+              }
+              // Group other vendor libraries
+              return 'vendor';
+            }
+            // Keep SearchBanner as a separate chunk since it's not critical
+            if (id.includes('SearchBanner')) {
+              return 'search';
+            }
+            // Keep analytics as separate non-critical chunk
+            if (id.includes('analytics')) {
+              return 'analytics';
+            }
+          },
+          // Optimize chunk loading
+          chunkFileNames: 'assets/[name]-[hash].js',
+          entryFileNames: 'assets/[name]-[hash].js',
+          assetFileNames: 'assets/[name]-[hash].[ext]'
+        }
+      },
+      // Reduce bundle size
+      minify: 'terser',
+      terserOptions: {
+        compress: {
+          drop_console: true,
+          drop_debugger: true,
+          pure_funcs: ['console.log', 'console.info', 'console.debug']
         }
       }
     },
     ssr: {
       // Optimize SSR performance
       noExternal: ['@astrojs/react']
+    },
+    // Optimize dependencies
+    optimizeDeps: {
+      include: ['react', 'react-dom'],
+      exclude: ['@astrojs/client']
     }
   },
   
