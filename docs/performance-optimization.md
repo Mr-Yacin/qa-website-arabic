@@ -124,8 +124,14 @@ window.addEventListener('load', function() {
 ### After Optimization
 - **Critical Path Latency**: Reduced by ~60%
 - **LCP**: Improved (non-blocking critical resources)
-- **Bundle Size**: Optimized with smart chunking
+- **Bundle Sizes**: Optimized chunking
+  - `client.js`: 0.10 kB (critical runtime)
+  - `vendor.js`: 4.17 kB (utilities)
+  - `SearchBanner.js`: 6.91 kB (non-critical, lazy loaded)
+  - `StarRating.js`: 4.85 kB (interactive component)
+  - `react-vendor.js`: 140.20 kB (React runtime, cached)
 - **Render Blocking**: Eliminated for non-critical components
+- **Build Performance**: Uses esbuild for faster compilation
 
 ## Implementation Checklist
 

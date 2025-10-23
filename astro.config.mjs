@@ -74,15 +74,9 @@ export default defineConfig({
           assetFileNames: 'assets/[name]-[hash].[ext]'
         }
       },
-      // Reduce bundle size
-      minify: 'terser',
-      terserOptions: {
-        compress: {
-          drop_console: true,
-          drop_debugger: true,
-          pure_funcs: ['console.log', 'console.info', 'console.debug']
-        }
-      }
+      // Reduce bundle size using esbuild (faster and included by default)
+      minify: 'esbuild',
+      target: 'es2022' // Support top-level await
     },
     ssr: {
       // Optimize SSR performance
