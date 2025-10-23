@@ -1,5 +1,17 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 
+// Analytics tracking function for search
+const trackSearch = (searchTerm, resultsCount) => {
+  if (typeof window !== 'undefined' && window.gtag) {
+    window.gtag('event', 'search', {
+      search_term: searchTerm,
+      custom_parameter_1: resultsCount.toString(),
+      content_type: 'search',
+      language: 'ar'
+    });
+  }
+};
+
 export default function SearchBanner({ 
   placeholder = "ابحث في الأسئلة...", 
   maxSuggestions = 5,
@@ -58,6 +70,9 @@ export default function SearchBanner({
         setSuggestions(newSuggestions);
         setIsOpen(newSuggestions.length > 0 && searchQuery.trim().length >= 2);
         setSelectedIndex(-1);
+        
+        // Track search event
+        trackSearch(searchQuery.trim(), newSuggestions.length);
       } catch (error) {
         if (error.name !== 'AbortError') {
           console.error('Search error:', error);

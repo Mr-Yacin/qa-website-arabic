@@ -1,5 +1,18 @@
 import React, { useState, useEffect } from 'react';
 
+// Analytics tracking function
+const trackRating = (questionId, rating, previousRating) => {
+  if (typeof window !== 'undefined' && window.gtag) {
+    window.gtag('event', 'rate_content', {
+      item_id: questionId,
+      rating: rating,
+      previous_rating: previousRating,
+      content_type: 'question_rating',
+      language: 'ar'
+    });
+  }
+};
+
 export default function StarRating({ slug, initialData }) {
   const [rating, setRating] = useState(initialData?.userRating || 0);
   const [hoveredRating, setHoveredRating] = useState(0);
@@ -90,6 +103,9 @@ export default function StarRating({ slug, initialData }) {
         if (data.ok) {
           setAverageRating(data.average);
           setVoteCount(data.count);
+          
+          // Track the rating event in Google Analytics
+          trackRating(slug, newRating, wasUpdate ? previousRating : undefined);
         } else {
           console.warn('Rating API returned error:', data.message);
           // Revert to previous state

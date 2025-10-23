@@ -143,15 +143,17 @@ const popularSearches = Array.from(tagCounts.entries())
     ) : searchResults.suggestions.length > 0 ? (
       <>
         <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-8">
-          {searchResults.suggestions.map((question: any) => (
-            <CardQuestion
-              href={`/q/${question.slug}`}
-              title={question.question}
-              description={question.short_answer}
-              date={new Date(question.pub_date)}
-              tags={question.tags}
-              difficulty={question.difficulty}
-            />
+          {searchResults.suggestions.map((question: any, index: number) => (
+            <div onclick={`if (window.gtag) { window.gtag('event', 'select_item', { item_list_id: 'search_results', item_list_name: 'Search Results', item_id: '${question.slug}', item_name: '${question.question.replace(/'/g, "\\'")}', index: ${index + 1}, search_term: '${trimmedQuery.replace(/'/g, "\\'")}', language: 'ar' }); }`}>
+              <CardQuestion
+                href={`/q/${question.slug}`}
+                title={question.question}
+                description={question.short_answer}
+                date={new Date(question.pub_date)}
+                tags={question.tags}
+                difficulty={question.difficulty}
+              />
+            </div>
           ))}
         </div>
         
@@ -303,4 +305,24 @@ const popularSearches = Array.from(tagCounts.entries())
       العودة للرئيسية
     </a>
   </div>
+
+  <!-- Google Analytics Search Tracking -->
+  {searchPerformed && !searchError && (
+    <script is:inline define:vars={{ 
+      searchQuery: trimmedQuery, 
+      resultsCount: searchResults.pagination.total,
+      hasResults: searchResults.suggestions.length > 0
+    }}>
+      // Track search results page view
+      if (typeof window !== 'undefined' && window.gtag) {
+        window.gtag('event', 'search', {
+          search_term: searchQuery,
+          custom_parameter_1: resultsCount.toString(),
+          custom_parameter_2: hasResults ? 'has_results' : 'no_results',
+          content_type: 'search_results_page',
+          language: 'ar'
+        });
+      }
+    </script>
+  )}
 </BaseLayout>

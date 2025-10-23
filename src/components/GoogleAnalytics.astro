@@ -1,0 +1,49 @@
+---
+// Google Analytics component for GA4
+// Only loads in production to avoid tracking during development
+
+const GA_TRACKING_ID = import.meta.env.PUBLIC_GA_TRACKING_ID;
+const isDev = import.meta.env.DEV;
+
+// Only render in production and when tracking ID is provided
+const shouldRender = !isDev && GA_TRACKING_ID;
+---
+
+{shouldRender && (
+  <>
+    <!-- Google tag (gtag.js) -->
+    <script async src={`https://www.googletagmanager.com/gtag/js?id=${GA_TRACKING_ID}`}></script>
+    <script is:inline define:vars={{ GA_TRACKING_ID }}>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', GA_TRACKING_ID, {
+        // Enhanced privacy settings
+        anonymize_ip: true,
+        allow_google_signals: false,
+        allow_ad_personalization_signals: false,
+        
+        // Performance optimizations
+        send_page_view: true,
+        
+        // Custom configuration for Arabic content
+        custom_map: {
+          'custom_parameter_1': 'language'
+        },
+        
+        // Set language for better analytics
+        language: 'ar',
+        country: 'SA'
+      });
+
+      // Track custom events for better insights
+      gtag('event', 'page_view', {
+        page_title: document.title,
+        page_location: window.location.href,
+        content_group1: 'Arabic Q&A',
+        language: 'ar'
+      });
+    </script>
+  </>
+)}
