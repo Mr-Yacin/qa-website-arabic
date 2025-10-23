@@ -4,6 +4,16 @@
 
 import { neon } from '@neondatabase/serverless';
 
+// Load environment variables in development
+if (process.env.NODE_ENV !== 'production') {
+  try {
+    const { config } = await import('dotenv');
+    config();
+  } catch (error) {
+    // dotenv not available, continue without it
+  }
+}
+
 // Database connection interface
 export interface DatabaseConnection {
   sql: (query: TemplateStringsArray, ...values: any[]) => Promise<any[]>;
@@ -211,17 +221,24 @@ export async function withTransaction<T>(
 // Common database operations
 export const DatabaseOperations = {
   // Get question by slug with rating data
-  async getQuestionWithRatings(sql: any, slug: string) {
+  async getQuestionWithRatings(sql: any, slug: string, userHash?: string) {
     return executeQuery(sql, async (sql) => {
-      const [question] = await sql`
-        SELECT q.*, 
-               COALESCE(r.rating, 0) as user_rating
-        FROM questions q
-        LEFT JOIN ratings r ON r.slug = q.slug AND r.user_hash = ${slug}
-        WHERE q.slug = ${slug}
-        LIMIT 1
-      `;
-      return question;
+      if (userHash) {
+        const [question] = await sql`
+          SELECT q.*, 
+                 COALESCE(r.rating, 0) as user_rating
+          FROM questions q
+          LEFT JOIN ratings r ON r.slug = q.slug AND r.user_hash = ${userHash}
+          WHERE q.slug = ${slug}
+          LIMIT 1
+        `;
+        return question;
+      } else {
+        const [question] = await sql`
+          SELECT * FROM questions WHERE slug = ${slug} LIMIT 1
+        `;
+        return question;
+      }
     });
   },
   

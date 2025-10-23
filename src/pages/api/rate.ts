@@ -7,7 +7,7 @@ function generateUserHash(request: Request): string {
   const ip = request.headers.get('cf-connecting-ip') || 
              request.headers.get('x-forwarded-for') || 
              request.headers.get('x-real-ip') || 
-             '0.0.0.0';
+             '127.0.0.1';
   const userAgent = request.headers.get('user-agent') || '';
   const salt = process.env.HASH_SALT || 'default-salt';
   
@@ -80,10 +80,10 @@ export const POST: APIRoute = async ({ request, url }) => {
     }
 
     // Check if this is an update (user has already rated this question)
-    const [existingRating] = await sql`
+    const existingRatings = await sql`
       SELECT rating FROM ratings WHERE slug = ${slug} AND user_hash = ${userHash} LIMIT 1
     `;
-    const wasUpdate = Boolean(existingRating);
+    const wasUpdate = existingRatings.length > 0;
 
     // Perform atomic transaction for rating update and aggregate recalculation
     const result = await withTransaction(sql, async (sql) => {
@@ -105,12 +105,12 @@ export const POST: APIRoute = async ({ request, url }) => {
       `;
 
       // Return updated aggregates
-      const [aggregates] = await sql`
+      const aggregates = await sql`
         SELECT rating_avg::float AS average, rating_count::int AS count 
         FROM questions WHERE slug = ${slug} LIMIT 1
       `;
 
-      return aggregates;
+      return aggregates[0];
     });
     
     console.log(`Rating ${wasUpdate ? 'updated' : 'submitted'}: ${ratingNum} stars for question: ${slug} by user: ${userHash}`);

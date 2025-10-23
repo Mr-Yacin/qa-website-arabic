@@ -38,14 +38,14 @@ let initialRatingData = {
 
 try {
   // Import database functions
-  const { createDatabaseConnection } = await import('../../lib/database.js');
+  const { createDatabaseConnection } = await import('../../lib/database.ts');
   const crypto = await import('crypto');
   
   // Generate privacy-friendly user hash
   const ip = Astro.request.headers.get('cf-connecting-ip') || 
              Astro.request.headers.get('x-forwarded-for') || 
              Astro.request.headers.get('x-real-ip') || 
-             Astro.clientAddress || '0.0.0.0';
+             Astro.clientAddress || '127.0.0.1';
   const userAgent = Astro.request.headers.get('user-agent') || '';
   const salt = process.env.HASH_SALT || 'default-salt';
   
@@ -58,7 +58,7 @@ try {
   // Get database connection and load rating data
   const sql = createDatabaseConnection();
   
-  const [questionData] = await sql`
+  const questionData = await sql`
     SELECT 
       q.rating_avg::float AS average,
       q.rating_count::int AS count,
@@ -69,10 +69,11 @@ try {
     LIMIT 1
   `;
   
-  if (questionData) {
-    initialRatingData.average = questionData.average;
-    initialRatingData.count = questionData.count;
-    initialRatingData.userRating = questionData.user_rating;
+  if (questionData && questionData.length > 0) {
+    const result = questionData[0];
+    initialRatingData.average = result.average;
+    initialRatingData.count = result.count;
+    initialRatingData.userRating = result.user_rating;
   }
 } catch (error) {
   console.warn('Failed to load initial rating data from database:', error);

@@ -7,7 +7,7 @@ function generateUserHash(request: Request): string {
   const ip = request.headers.get('cf-connecting-ip') || 
              request.headers.get('x-forwarded-for') || 
              request.headers.get('x-real-ip') || 
-             '0.0.0.0';
+             '127.0.0.1';
   const userAgent = request.headers.get('user-agent') || '';
   const salt = process.env.HASH_SALT || 'default-salt';
   
@@ -46,7 +46,7 @@ export const GET: APIRoute = async ({ url, request }) => {
     const userHash = generateUserHash(request);
     
     // Get rating aggregates from questions table and user's current rating
-    const [questionData] = await sql`
+    const questionData = await sql`
       SELECT 
         q.rating_avg::float AS avg,
         q.rating_count::int AS count,
@@ -57,8 +57,10 @@ export const GET: APIRoute = async ({ url, request }) => {
       LIMIT 1
     `;
     
+    const questionResult = questionData[0];
+    
     // Check if question exists
-    if (!questionData) {
+    if (!questionResult) {
       return new Response(
         JSON.stringify({ 
           avg: null,
@@ -73,9 +75,9 @@ export const GET: APIRoute = async ({ url, request }) => {
       );
     }
     
-    const avg = questionData.avg || null;
-    const count = questionData.count || 0;
-    const userRating = questionData.user_rating || null;
+    const avg = questionResult.avg || null;
+    const count = questionResult.count || 0;
+    const userRating = questionResult.user_rating || null;
     
     console.log(`Average rating requested for question: ${slug} - avg: ${avg}, count: ${count}, userRating: ${userRating}`);
 

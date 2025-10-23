@@ -12,14 +12,9 @@ export default function StarRating({ slug, initialData }) {
   // Load existing rating data from server on component mount
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      // If we have initial data, use it and skip the API call for better performance
-      if (initialData && (initialData.average !== null || initialData.userRating !== null)) {
-        // Use database-sourced initial data directly
-        // No localStorage synchronization needed - database is the single source of truth
-      } else {
-        // No initial data, load from API
-        loadExistingRating();
-      }
+      // Always load from API to ensure we have the most up-to-date user rating
+      // This handles cases where server-side user hash generation might be inconsistent
+      loadExistingRating();
       
       // Smooth transition from fallback to React component
       const fallback = document.getElementById('rating-fallback');
