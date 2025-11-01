@@ -11,6 +11,30 @@ const trimmedQuery = searchQuery.trim();
 const page = Math.max(1, parseInt(url.searchParams.get('page') || '1'));
 const limit = 12; // Results per page
 
+// Structured data for search functionality
+const searchActionStructuredData = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "@id": `${Astro.site}#website`,
+  "url": `${Astro.site}`,
+  "name": "موقع الأسئلة والأجوبة",
+  "description": "موقع متخصص في الأسئلة والأجوبة باللغة العربية",
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": {
+      "@type": "EntryPoint",
+      "urlTemplate": `${Astro.site}/search?q={search_term_string}`
+    },
+    "query-input": "required name=search_term_string"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "موقع الأسئلة والأجوبة",
+    "url": `${Astro.site}`
+  },
+  "inLanguage": "ar-SA"
+};
+
 // Database search results
 let searchResults: any = {
   suggestions: [],
@@ -74,6 +98,9 @@ const popularSearches = Array.from(tagCounts.entries())
 ---
 
 <BaseLayout title={title} description={description}>
+  <!-- Search Action Structured Data -->
+  <script type="application/ld+json" set:html={JSON.stringify(searchActionStructuredData)} is:inline />
+
   <!-- Page Header -->
   <div class="mb-8">
     <h1 class="text-3xl md:text-4xl font-bold text-zinc-900 dark:text-zinc-100 mb-4">

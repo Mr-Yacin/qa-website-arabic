@@ -124,15 +124,15 @@ const faqStructuredData = {
     "answerCount": 1,
     "dateCreated": pubDate.toISOString(),
     "author": {
-      "@type": "Organization", 
+      "@type": "Organization",
       "name": "موقع الأسئلة والأجوبة"
     }
   }
 };
 
-const blogPostingStructuredData = {
+const articleStructuredData = {
   "@context": "https://schema.org",
-  "@type": "BlogPosting",
+  "@type": "Article",
   "headline": question,
   "description": shortAnswer,
   "datePublished": pubDate.toISOString(),
@@ -143,23 +143,50 @@ const blogPostingStructuredData = {
     "url": Astro.site?.toString()
   },
   "publisher": {
-    "@type": "Organization", 
+    "@type": "Organization",
     "name": "موقع الأسئلة والأجوبة",
     "url": Astro.site?.toString(),
     "logo": {
       "@type": "ImageObject",
-      "url": new URL('/favicon.svg', Astro.site).toString()
+      "url": new URL('/favicon.svg', Astro.site).toString(),
+      "width": 32,
+      "height": 32
     }
   },
   "keywords": tags.join(", "),
   "articleSection": "أسئلة وأجوبة",
   "wordCount": shortAnswer.length,
-  "inLanguage": "ar",
+  "inLanguage": "ar-SA",
   "isAccessibleForFree": true,
   "mainEntityOfPage": {
     "@type": "WebPage",
     "@id": new URL(Astro.url.pathname, Astro.site).toString()
-  }
+  },
+  "image": heroImage ? {
+    "@type": "ImageObject",
+    "url": new URL(heroImage, Astro.site).toString(),
+    "width": 800,
+    "height": 450,
+    "caption": `صورة توضيحية للسؤال: ${question}`
+  } : undefined,
+  "speakable": {
+    "@type": "SpeakableSpecification",
+    "cssSelector": [".content-area"]
+  },
+  "about": tags.map(tag => ({
+    "@type": "Thing",
+    "name": tag
+  })),
+  "educationalUse": "instructionalMaterial",
+  "learningResourceType": "question",
+  "difficulty": difficulty,
+  "aggregateRating": initialRatingData.average ? {
+    "@type": "AggregateRating",
+    "ratingValue": initialRatingData.average,
+    "ratingCount": initialRatingData.count,
+    "bestRating": 5,
+    "worstRating": 1
+  } : undefined
 };
 
 // Add breadcrumb structured data
@@ -196,7 +223,7 @@ const breadcrumbStructuredData = {
 >
   <!-- Enhanced Structured Data for SEO -->
   <script type="application/ld+json" set:html={JSON.stringify(faqStructuredData)} is:inline />
-  <script type="application/ld+json" set:html={JSON.stringify(blogPostingStructuredData)} is:inline />
+  <script type="application/ld+json" set:html={JSON.stringify(articleStructuredData)} is:inline />
   <script type="application/ld+json" set:html={JSON.stringify(breadcrumbStructuredData)} is:inline />
   
   <!-- Google Analytics Question View Tracking -->

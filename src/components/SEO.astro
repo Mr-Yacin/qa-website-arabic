@@ -66,3 +66,54 @@ const ogImageURL = ogImage || new URL('/favicon.svg', Astro.site);
 <!-- Resource hints for better performance -->
 <link rel="dns-prefetch" href="//fonts.googleapis.com" />
 <link rel="dns-prefetch" href="//fonts.gstatic.com" />
+
+<!-- Structured Data for Organization and WebSite -->
+<script type="application/ld+json" set:html={`
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "${Astro.site}#organization",
+      "name": "موقع الأسئلة والأجوبة",
+      "url": "${Astro.site}",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "${new URL('/favicon.svg', Astro.site)}",
+        "width": 32,
+        "height": 32
+      },
+      "description": "موقع متخصص في الأسئلة والأجوبة باللغة العربية، يقدم إجابات شاملة ومفيدة في مختلف المجالات",
+      "foundingDate": "2024",
+      "sameAs": [
+        "https://github.com/soaale"
+      ],
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "telephone": "",
+        "contactType": "customer service",
+        "url": "${new URL('/contact', Astro.site)}"
+      }
+    },
+    {
+      "@type": "WebSite",
+      "@id": "${Astro.site}#website",
+      "url": "${Astro.site}",
+      "name": "موقع الأسئلة والأجوبة",
+      "description": "موقع متخصص في الأسئلة والأجوبة باللغة العربية، يقدم إجابات شاملة ومفيدة في مختلف المجالات",
+      "publisher": {
+        "@id": "${Astro.site}#organization"
+      },
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": "${new URL('/search?q={search_term_string}', Astro.site)}"
+        },
+        "query-input": "required name=search_term_string"
+      },
+      "inLanguage": "ar-SA"
+    }
+  ]
+}
+`} />

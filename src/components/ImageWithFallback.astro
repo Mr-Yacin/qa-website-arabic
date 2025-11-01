@@ -84,7 +84,7 @@ const textFontSize = getResponsiveFontSize(displayText.length);
             <div class="absolute inset-0 image-fallback">
               <img 
                 src={defaultPlaceholder}
-                alt="صورة افتراضية"
+                alt={`صورة افتراضية للسؤال: ${alt}`}
                 class="w-full h-full object-cover"
                 width={width}
                 height={height}
@@ -142,7 +142,7 @@ const textFontSize = getResponsiveFontSize(displayText.length);
       {placeholderType === 'default' ? (
         <img
           src={defaultPlaceholder}
-          alt="صورة افتراضية"
+          alt={`صورة افتراضية للسؤال: ${alt}`}
           class="w-full h-full object-cover"
           width={width}
           height={height}
