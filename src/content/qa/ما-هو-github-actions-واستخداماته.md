@@ -1,6 +1,4 @@
 ---
-```
----
 question: "ما هو GitHub Actions واستخداماته؟"
 shortAnswer: "GitHub Actions منصة تشغيل مهام مؤتمتة (CI/CD) داخل GitHub لإجراء الفحوصات والنشر والعمليات التكاملية فور تغيّر المستودع."
 pubDate: 2025-11-01
