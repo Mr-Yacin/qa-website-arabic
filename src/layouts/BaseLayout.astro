@@ -37,7 +37,11 @@ const {
     
     <!-- Google Analytics -->
     <GoogleAnalytics />
-    
+
+    <!-- AdSense -->
+    <script async src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${import.meta.env.PUBLIC_ADSENSE_ID || 'ca-pub-6864395837128379'}`}
+     crossorigin="anonymous"></script>
+
     <!-- Performance Optimizations -->
     <PerformanceOptimizer />
     
@@ -84,6 +88,11 @@ const {
     <link rel="dns-prefetch" href="https://fonts.gstatic.com">
     <link rel="dns-prefetch" href="https://www.googletagmanager.com">
     <link rel="dns-prefetch" href="https://www.google-analytics.com">
+
+    <!-- AdSense Performance Optimization -->
+    <link rel="preconnect" href="https://pagead2.googlesyndication.com" crossorigin>
+    <link rel="dns-prefetch" href="https://googleads.g.doubleclick.net">
+    <link rel="dns-prefetch" href="https://tpc.googlesyndication.com">
     
     <!-- Preload critical JavaScript chunks -->
     <link rel="modulepreload" href="/_astro/client.js" as="script">
