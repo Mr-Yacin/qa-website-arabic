@@ -127,17 +127,9 @@
   /* Pre tag styles for proper text direction and wrapping */
   pre {
     direction: ltr !important;
+    @apply text-left;
     white-space: pre-wrap;
     overflow-wrap: break-word;
-    unicode-bidi: bidi-override !important;
-  }
-
-  pre *,
-  pre code *,
-  .astro-code *,
-  pre.astro-code *,
-  pre[class*="astro-code"] * {
-    direction: ltr !important;
   }
 
   /* Skip to main content link for screen readers */
