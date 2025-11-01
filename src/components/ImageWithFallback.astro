@@ -138,7 +138,7 @@ const textFontSize = getResponsiveFontSize(displayText.length);
     </>
   ) : showPlaceholder ? (
     <!-- Only Placeholder (no src provided) -->
-    <div>
+    <div class="w-full h-full">
       {placeholderType === 'default' ? (
         <img
           src={defaultPlaceholder}
@@ -149,7 +149,7 @@ const textFontSize = getResponsiveFontSize(displayText.length);
           loading={loading}
         />
       ) : placeholderType === 'generated' ? (
-        <div class={`flex items-center justify-center bg-gradient-to-br ${colors.gradient} h-full p-3 sm:p-6 md:p-8`}>
+        <div class={`flex items-center justify-center bg-gradient-to-br ${colors.gradient} w-full h-full p-3 sm:p-6 md:p-8`}>
           <div class="text-center text-white max-w-full w-full">
             {shouldShowText ? (
               <>
@@ -193,6 +193,7 @@ const textFontSize = getResponsiveFontSize(displayText.length);
       ) : null}
     </div>
   ) : null}
+</div>
 </div>
 
 <style>
