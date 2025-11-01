@@ -43,3 +43,6 @@ Thumbs.db
 # data storage (keep structure, ignore content)
 data/*.json
 !data/.gitkeep
+
+# kiro folder
+.kiro/
