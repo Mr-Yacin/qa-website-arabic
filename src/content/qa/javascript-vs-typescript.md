@@ -4,7 +4,6 @@ shortAnswer: "TypeScript يضيف نظام أنواع قوي إلى JavaScript �
 pubDate: 2025-11-01
 tags: ["javascript", "typescript", "web-development", "type-system"]
 difficulty: "easy"
-heroImage: "/images/placeholder-question.svg"
 slug: "javascript-vs-typescript"
 ---
 

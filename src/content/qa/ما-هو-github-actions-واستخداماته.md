@@ -4,7 +4,6 @@ shortAnswer: "GitHub Actions منصة تشغيل مهام مؤتمتة (CI/CD) �
 pubDate: 2025-11-01
 tags: ["continuous-integration", "devops", "automation", "workflows"]
 difficulty: "easy"
-heroImage: "/images/placeholder-question.svg"
 slug: "ما-هو-github-actions-واستخداماته"
 ---
 # ما هو GitHub Actions واستخداماته؟

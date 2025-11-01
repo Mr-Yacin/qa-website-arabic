@@ -4,7 +4,6 @@ shortAnswer: "Astro هو إطار عمل حديث لبناء مواقع الوي
 pubDate: 2024-01-15
 tags: ["astro", "web-development", "static-sites", "performance"]
 difficulty: "easy"
-heroImage: "/images/placeholder-question.svg"
 ---
 
 # ما هو Astro؟

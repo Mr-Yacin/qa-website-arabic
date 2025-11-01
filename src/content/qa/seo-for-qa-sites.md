@@ -4,7 +4,6 @@ shortAnswer: "حسّن SEO لمواقع Q&A باستخدام structured data، �
 pubDate: 2024-02-01
 tags: ["seo", "qa-sites", "structured-data", "optimization", "search-engines"]
 difficulty: "hard"
-heroImage: "/images/seo-optimization.jpg"
 ---
 
 # تحسين SEO لمواقع الأسئلة والأجوبة
