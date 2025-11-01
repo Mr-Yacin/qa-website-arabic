@@ -1,5 +1,6 @@
 ---
 import { getFirstChar, getPlaceholderColors, generatePlaceholderUrl, formatTextForPlaceholder, getResponsiveFontSize, getMobileOptimizedText } from '../lib/imageUtils';
+import { generateSrcSet, generateSizes } from '../lib/performance';
 
 export interface Props {
   src?: string;
@@ -9,25 +10,39 @@ export interface Props {
   height?: number;
   loading?: 'lazy' | 'eager';
   decoding?: 'async' | 'sync' | 'auto';
+  priority?: boolean;
+  sizes?: string;
+  widths?: number[];
   showPlaceholder?: boolean;
   placeholderType?: 'generated' | 'default' | 'none';
   questionText?: string;
   showQuestionText?: boolean;
 }
 
-const { 
-  src, 
-  alt, 
-  class: className = '', 
-  width = 800, 
+const {
+  src,
+  alt,
+  class: className = '',
+  width = 800,
   height = 450,
   loading = 'lazy',
   decoding = 'async',
+  priority = false,
+  sizes,
+  widths = [400, 800, 1200],
   showPlaceholder = true,
   placeholderType = 'generated',
   questionText,
   showQuestionText = true
 } = Astro.props;
+
+// Generate responsive attributes for optimization
+const srcSet = src ? generateSrcSet(src, widths) : '';
+const sizesAttr = sizes || generateSizes();
+
+// Priority images should load eagerly
+const loadingAttr = priority ? 'eager' : loading;
+const fetchPriority = priority ? 'high' : 'auto';
 
 // Generate placeholder data using utilities
 const firstChar = getFirstChar(alt);
@@ -45,17 +60,20 @@ const textFontSize = getResponsiveFontSize(displayText.length);
 <div class={`relative aspect-video rounded-lg overflow-hidden bg-zinc-100 dark:bg-zinc-800 min-h-[200px] sm:min-h-[250px] md:min-h-[300px] ${className}`}>
   {src ? (
     <>
-      <!-- Actual Image -->
-      <img 
+      <!-- Actual Image with responsive optimization -->
+      <img
         src={src}
+        srcset={srcSet}
+        sizes={sizesAttr}
         alt={alt}
-        class="w-full h-full object-cover transition-opacity duration-300 image-main"
+        class="w-full h-full object-cover transition-opacity duration-300 image-main optimized-image"
         width={width}
         height={height}
-        loading={loading}
+        loading={loadingAttr}
         decoding={decoding}
-        style="opacity: 0;"
-        onload="this.style.opacity='1'; this.nextElementSibling?.style && (this.nextElementSibling.style.display='none');"
+        fetchpriority={fetchPriority}
+        style="opacity: 0; aspect-ratio: auto;"
+        onload="this.style.opacity='1'; this.classList.add('loaded'); this.nextElementSibling?.style && (this.nextElementSibling.style.display='none');"
         onerror="this.style.display='none'; this.nextElementSibling?.style && (this.nextElementSibling.style.display='flex');"
       />
       
@@ -120,9 +138,9 @@ const textFontSize = getResponsiveFontSize(displayText.length);
     </>
   ) : showPlaceholder ? (
     <!-- Only Placeholder (no src provided) -->
-    <>
+    <div>
       {placeholderType === 'default' ? (
-        <img 
+        <img
           src={defaultPlaceholder}
           alt="صورة افتراضية"
           class="w-full h-full object-cover"
@@ -173,7 +191,7 @@ const textFontSize = getResponsiveFontSize(displayText.length);
           </div>
         </div>
       ) : null}
-    </>
+    </div>
   ) : null}
 </div>
 
@@ -181,8 +199,45 @@ const textFontSize = getResponsiveFontSize(displayText.length);
   .image-fallback {
     display: none;
   }
-  
+
   .image-main[style*="opacity: 0"] + .image-fallback {
     display: flex;
   }
+
+  .optimized-image {
+    transition: opacity 0.2s ease-in-out;
+  }
+
+  .optimized-image[loading="lazy"] {
+    opacity: 0;
+  }
+
+  .optimized-image.loaded {
+    opacity: 1;
+  }
 </style>
+
+<script>
+  // Optimize image loading with enhanced performance
+  document.addEventListener('DOMContentLoaded', () => {
+    const images = document.querySelectorAll('.optimized-image');
+
+    images.forEach((img) => {
+      const imageElement = img as HTMLImageElement;
+      if (imageElement.complete) {
+        imageElement.classList.add('loaded');
+        imageElement.style.opacity = '1';
+      } else {
+        imageElement.addEventListener('load', function() {
+          this.classList.add('loaded');
+          this.style.opacity = '1';
+        });
+
+        imageElement.addEventListener('error', function() {
+          this.style.opacity = '1';
+          // Could add error handling here
+        });
+      }
+    });
+  });
+</script>

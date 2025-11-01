@@ -123,7 +123,23 @@
       aspect-ratio: 16 / 10;
     }
   }
-  
+
+  /* Pre tag styles for proper text direction and wrapping */
+  pre {
+    direction: ltr !important;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+    unicode-bidi: bidi-override !important;
+  }
+
+  pre *,
+  pre code *,
+  .astro-code *,
+  pre.astro-code *,
+  pre[class*="astro-code"] * {
+    direction: ltr !important;
+  }
+
   /* Skip to main content link for screen readers */
   .skip-to-main {
     @apply absolute -top-40 left-6 bg-indigo-600 text-white px-4 py-2 rounded-md z-50 transition-all duration-200;

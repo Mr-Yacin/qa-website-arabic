@@ -7,10 +7,14 @@
 
 import fs from 'fs/promises';
 import path from 'path';
+//add env
+import dotenv from 'dotenv';
+dotenv.config();
 
 async function buildForProduction() {
   try {
     console.log('🏗️  Preparing production build...\n');
+
     
     // Ensure data directory exists in public for other assets
     const publicDataDir = path.join(process.cwd(), 'public', 'data');

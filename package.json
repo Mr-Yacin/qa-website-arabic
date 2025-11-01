@@ -4,7 +4,7 @@
   "version": "0.0.1",
   "scripts": {
     "dev": "astro dev --host",
-    "build": "node scripts/build-for-production.mjs && astro build",
+    "build": "node scripts/prod/build-for-production.mjs && astro build",
     "preview": "astro preview",
     "lint": "eslint . --ext .js,.ts,.astro",
     "format": "prettier --write .",
