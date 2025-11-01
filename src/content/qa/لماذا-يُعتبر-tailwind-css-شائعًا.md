@@ -5,7 +5,6 @@ pubDate: 2025-11-01
 tags: ["css", "utility-classes", "frontend", "tailwindcss"]
 difficulty: "medium"
 heroImage: "/images/placeholder-question.svg"
-slug: "لماذا-يُعتبر-tailwind-css-شائعًا"
 ---
 # لماذا يُعتبر Tailwind CSS شائعًا؟
 يُعد Tailwind CSS خيارًا مُفضّلًا لفرق الواجهة الأمامية لأنه يُبسّط بناء التصميمات المتسقة عبر فئات مساعدة صغيرة، ويقلل من الاعتماد على CSS مخصص، ويعمل بكفاءة في بيئات الإنتاج والـ JIT. بهذه الطريقة، يُمكنك الوصول إلى النتيجة بسرعة دون التضحية بالضبط أو الأداء.

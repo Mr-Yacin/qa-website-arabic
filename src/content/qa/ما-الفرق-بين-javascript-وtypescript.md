@@ -5,7 +5,6 @@ pubDate: 2025-11-01
 tags: ["typescript", "javascript", "type-system", "web-development", "static-typing"]
 difficulty: "medium"
 heroImage: "/images/placeholder-question.svg"
-slug: "ما-الفرق-بين-javascript-وtypescript"
 ---
 
 # ما الفرق بين JavaScript وTypeScript؟
