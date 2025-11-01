@@ -12,8 +12,8 @@ const { title, description, ogImage, canonical, noindex } = Astro.props;
 // Generate canonical URL if not provided
 const canonicalURL = canonical || new URL(Astro.url.pathname, Astro.site);
 
-// Default OG image if not provided
-const ogImageURL = ogImage || new URL('/favicon.svg', Astro.site);
+// Default OG image if not provided - use dynamic OG image generation
+const ogImageURL = ogImage || new URL(`/api/og-image?title=${encodeURIComponent(title)}&description=${encodeURIComponent(description)}`, Astro.site);
 ---
 
 <!-- Charset must be first for proper encoding -->

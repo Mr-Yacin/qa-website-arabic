@@ -104,6 +104,9 @@ const difficultyColors = {
 const pageTitle = `${question} - موقع الأسئلة والأجوبة`;
 const pageDescription = shortAnswer;
 
+// Dynamic OG image for question pages
+const ogImageURL = new URL(`/api/og-image?title=${encodeURIComponent(question)}&description=${encodeURIComponent(shortAnswer)}`, Astro.site);
+
 // Enhanced structured data for better SEO
 const faqStructuredData = {
   "@context": "https://schema.org",
@@ -216,10 +219,10 @@ const breadcrumbStructuredData = {
 };
 ---
 
-<BaseLayout 
+<BaseLayout
   title={pageTitle}
   description={pageDescription}
-  ogImage={heroImage}
+  ogImage={ogImageURL.toString()}
 >
   <!-- Enhanced Structured Data for SEO -->
   <script type="application/ld+json" set:html={JSON.stringify(faqStructuredData)} is:inline />
