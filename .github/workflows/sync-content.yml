@@ -25,7 +25,7 @@ jobs:
         run: |
           echo "🔄 Starting content synchronization..."
 
-          response=$(curl -s -w "%{http_code}" -X POST "${{ secrets.SITE_URL }}/api/reindex" \
+          response=$(curl -s -w "%{http_code}" -X POST "https://www.soaale.com/api/reindex" \
             -H "Authorization: Bearer ${{ secrets.REINDEX_TOKEN }}" \
             -H "Content-Type: application/json" \
             -o response.json)
